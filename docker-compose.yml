@@ -1,0 +1,7 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: app/templates/Dockerfile
+    ports:
+      - "8090:80"
