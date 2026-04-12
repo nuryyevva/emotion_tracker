@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Войти | Трекер эмоций</title>
+    
+    <!-- Font Import -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#FCFBFA',
+                            sage: '#A7B5A7',
+                            sageDark: '#7A8C7A',
+                            sand: '#EDE6DD',
+                            sky: '#E3EDF5',
+                            heading: '#1F2937',
+                            muted: '#6B7280'
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #FCFBFA;
+            min-height: 100vh;
+        }
+        
+        /* Blob Animations */
+        .blob-bg {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            z-index: -1;
+            animation: float 8s infinite ease-in-out alternate;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(20px, 20px) rotate(5deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans text-gray-900">
+
+    <!-- Background Elements -->
+    <div class="blob-bg bg-brand-sky w-[30rem] h-[30rem] top-[-5rem] left-[-5rem]"></div>
+    <div class="blob-bg bg-brand-sand w-[25rem] h-[25rem] bottom-[-5rem] right-[-5rem]"></div>
+
+    <!-- Login Card -->
+    <main class="w-full max-w-md bg-white rounded-3xl shadow-soft p-8 md:p-10 relative z-10 animate-fade-in-up">
+        
+        <!-- Header Section -->
+        <div class="text-center mb-8">
+            <!-- Abstract Sun/Serenity Icon -->
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-sky mb-5 text-brand-sageDark">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 2V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M12 20V22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M2 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M20 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M4.92893 4.92893L6.34315 6.34315" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M17.6569 17.6569L19.0711 19.0711" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M19.0711 4.92893L17.6569 6.34315" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M6.34315 17.6569L4.92893 19.0711" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            
+            <h1 class="text-2xl font-medium text-gray-900 mb-2">Добро пожаловать</h1>
+            <p class="text-sm text-gray-500">Введите свои данные для входа</p>
+        </div>
+
+        <!-- Form -->
+        <form action="#" method="POST" class="space-y-5">
+            
+            <!-- Email Input -->
+            <div>
+                <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5 ml-1">Email</label>
+                <div class="relative">
+                    <input type="email" id="email" name="email" 
+                           class="block w-full pl-4 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sky focus:border-transparent transition-all duration-200"
+                           placeholder="hello@example.com" required>
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div>
+                <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5 ml-1">Пароль</label>
+                <div class="relative">
+                    <input type="password" id="password" name="password" 
+                           class="block w-full pl-4 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sky focus:border-transparent transition-all duration-200"
+                           placeholder="••••••••" required>
+                    
+                    <!-- Eye Icon (Visual only) -->
+                    <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Forgot Password Link -->
+            <div class="flex justify-end">
+                <a href="#" class="text-xs text-brand-sageDark hover:text-brand-sageDark underline decoration-dotted underline-offset-2 transition-colors">Забыли пароль?</a>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full py-4 px-6 bg-brand-heading text-white rounded-2xl font-medium text-base shadow-lg shadow-gray-200 hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 mt-2">
+                Войти
+            </button>
+        </form>
+
+        <!-- Footer / Sign Up Link -->
+        <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+            <p class="text-sm text-gray-500">
+                Нет аккаунта? 
+                <a href="register.html" class="text-brand-heading font-medium hover:text-brand-sageDark transition-colors">Создать новый</a>
+            </p>
+        </div>
+
+    </main>
+
+    <!-- Simple Entry Animation -->
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        main {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+    </style>
+</body>
+</html>
