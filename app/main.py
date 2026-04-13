@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
-from emotion_tracker_db.crud import create_emotion_record, create_user, list_emotion_records, list_users
-from emotion_tracker_db.db import create_database, create_tables, get_session
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from db.crud import create_emotion_record, create_user, list_emotion_records, list_users
+from db.db import create_database, create_tables, get_session
+from utils.db_gui import run_db_gui
 
 
 def cmd_init_db(_: argparse.Namespace) -> None:
@@ -92,6 +99,9 @@ def build_parser() -> argparse.ArgumentParser:
     list_records_parser = subparsers.add_parser("list-emotion-records", help="List emotion records for a user.")
     list_records_parser.add_argument("--user-id", required=True)
     list_records_parser.set_defaults(func=cmd_list_emotion_records)
+
+    gui_parser = subparsers.add_parser("gui", help="Launch simple desktop GUI for DB testing.")
+    gui_parser.set_defaults(func=lambda _: run_db_gui())
 
     return parser
 
