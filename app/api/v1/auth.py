@@ -1,41 +1,22 @@
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, EmailStr
-from typing import Optional
-from datetime import datetime, timedelta
-import jwt
 import hashlib
 import secrets
+from datetime import datetime, timedelta
+from uuid import uuid4
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, EmailStr
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
-
-# Простое хеширование без bcrypt
-def hash_password(password: str) -> str:
-    salt = secrets.token_hex(16)
-    hash_obj = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000)
-    return f"{hash_obj.hex()}:{salt}"
-
-
-def verify_password(plain: str, hashed: str) -> bool:
-    stored_hash, salt = hashed.split(":")
-    new_hash = hashlib.pbkdf2_hmac('sha256', plain.encode(), salt.encode(), 100000).hex()
-    return new_hash == stored_hash
+# ===== ХРАНИЛИЩА (временные, для тестов) =====
+users_db = {}           # email -> user data
+refresh_tokens_db = {}  # refresh_token -> token data
 
 
-# Хранилище
-users_db = {}
-
-
+# ===== МОДЕЛИ =====
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
-    name: Optional[str] = None
-
-
-class RegisterResponse(BaseModel):
-    user_id: str
-    email: str
-    message: str
+    name: str
 
 
 class LoginRequest(BaseModel):
@@ -43,47 +24,63 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
 class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str
-    token_type: str
-    expires_in: int
+    token_type: str = "bearer"
 
 
-class PasswordResetRequest(BaseModel):
-    email: EmailStr
+class RegisterResponse(BaseModel):
+    message: str
+    user_id: str
 
 
-class PasswordResetConfirmRequest(BaseModel):
-    token: str
-    new_password: str
+# ===== ФУНКЦИИ ХЕШИРОВАНИЯ =====
+def hash_password(password: str) -> str:
+    """Хеширует пароль с солью (SHA-256)"""
+    salt = secrets.token_hex(16)
+    hash_value = hashlib.sha256((salt + password).encode()).hexdigest()
+    return f"{salt}:{hash_value}"
 
 
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Проверяет пароль против хеша"""
+    salt, hash_value = hashed_password.split(":")
+    computed_hash = hashlib.sha256((salt + plain_password).encode()).hexdigest()
+    return computed_hash == hash_value
 
 
-class RefreshTokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-    expires_in: int
+# ===== ФУНКЦИИ ГЕНЕРАЦИИ ТОКЕНОВ =====
+def generate_access_token() -> str:
+    """Генерирует простой access-токен (UUID)"""
+    return str(uuid4())
 
 
-@router.post("/register", response_model=RegisterResponse, status_code=201)
+def generate_refresh_token() -> str:
+    """Генерирует простой refresh-токен (UUID)"""
+    return str(uuid4())
+
+
+# ===== ЭНДПОИНТЫ =====
+@router.post("/register", response_model=RegisterResponse)
 async def register(request: RegisterRequest):
     if request.email in users_db:
-        raise HTTPException(400, "Email already registered")
+        raise HTTPException(status_code=400, detail="User already exists")
 
-    user_id = secrets.token_hex(16)
+    user_id = str(uuid4())
     users_db[request.email] = {
         "user_id": user_id,
         "email": request.email,
-        "password_hash": hash_password(request.password),
         "name": request.name,
-        "created_at": datetime.utcnow().isoformat()
+        "password_hash": hash_password(request.password),
+        "created_at": datetime.utcnow()
     }
 
-    return RegisterResponse(user_id=user_id, email=request.email, message="User registered successfully")
+    return RegisterResponse(message="User registered successfully", user_id=user_id)
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -91,32 +88,52 @@ async def login(request: LoginRequest):
     user = users_db.get(request.email)
 
     if not user or not verify_password(request.password, user["password_hash"]):
-        raise HTTPException(401, "Invalid email or password")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    token = jwt.encode({"sub": user["user_id"], "exp": datetime.utcnow() + timedelta(hours=1)}, "secret",
-                       algorithm="HS256")
-    refresh = jwt.encode({"sub": user["user_id"], "exp": datetime.utcnow() + timedelta(days=7)}, "secret",
-                         algorithm="HS256")
+    access_token = generate_access_token()
+    refresh_token = generate_refresh_token()
 
-    return LoginResponse(access_token=token, refresh_token=refresh, token_type="bearer", expires_in=3600)
+    refresh_tokens_db[refresh_token] = {
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "expires_at": datetime.utcnow() + timedelta(days=7)
+    }
 
-
-@router.post("/refresh", response_model=RefreshTokenResponse)
-async def refresh(request: RefreshTokenRequest):
-    try:
-        payload = jwt.decode(request.refresh_token, "secret", algorithms=["HS256"])
-        new_token = jwt.encode({"sub": payload["sub"], "exp": datetime.utcnow() + timedelta(hours=1)}, "secret",
-                               algorithm="HS256")
-        return RefreshTokenResponse(access_token=new_token, token_type="bearer", expires_in=3600)
-    except:
-        raise HTTPException(401, "Invalid refresh token")
+    return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.post("/password/reset", status_code=202)
-async def reset(request: PasswordResetRequest):
-    return {"message": "If account exists, you will receive a reset link"}
+@router.post("/refresh")
+async def refresh(request: RefreshRequest):
+    token_data = refresh_tokens_db.get(request.refresh_token)
+
+    if not token_data:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    if token_data["expires_at"] < datetime.utcnow():
+        del refresh_tokens_db[request.refresh_token]
+        raise HTTPException(status_code=401, detail="Refresh token expired")
+
+    # Генерируем новые токены
+    new_access_token = generate_access_token()
+    new_refresh_token = generate_refresh_token()
+
+    # Удаляем старый и сохраняем новый
+    del refresh_tokens_db[request.refresh_token]
+    refresh_tokens_db[new_refresh_token] = {
+        "user_id": token_data["user_id"],
+        "email": token_data["email"],
+        "expires_at": datetime.utcnow() + timedelta(days=7)
+    }
+
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer"
+    }
 
 
-@router.post("/password/reset/confirm")
-async def reset_confirm(request: PasswordResetConfirmRequest):
-    return {"message": "Password successfully reset"}
+@router.post("/logout")
+async def logout(request: RefreshRequest):
+    if request.refresh_token in refresh_tokens_db:
+        del refresh_tokens_db[request.refresh_token]
+    return {"message": "Logged out successfully"}
