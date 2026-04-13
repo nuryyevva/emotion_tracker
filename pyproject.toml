@@ -17,6 +17,8 @@ celery = "^5.6.3"
 passlib = "^1.7.4"
 python-jose = "^3.5.0"
 sqlalchemy = "^2.0.48"
+psycopg = "^3.2.9"
+alembic = "^1.16.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"

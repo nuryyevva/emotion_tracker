@@ -6,7 +6,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .models import EmotionRecord, User, UserStatus
+from app.models import EmotionRecord, User, UserStatus
 
 
 def create_user(session: Session, email: str, password_hash: str, timezone: str, status: UserStatus = UserStatus.ACTIVE) -> User:

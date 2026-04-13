@@ -3,14 +3,31 @@ from __future__ import annotations
 import os
 from urllib.parse import urlparse
 
-import psycopg
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from .models import Base
+from app.core.database import Base
 
 DEFAULT_DATABASE_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/emotion_tracker"
+
+
+def configure_postgres_client() -> None:
+    if os.name != "nt":
+        return
+
+    candidate_dirs = [
+        r"C:\Program Files\PostgreSQL\18\bin",
+        r"C:\Program Files\PostgreSQL\17\bin",
+        r"C:\Program Files\PostgreSQL\16\bin",
+    ]
+
+    for directory in candidate_dirs:
+        if os.path.exists(directory):
+            os.environ["PATH"] = directory + os.pathsep + os.environ.get("PATH", "")
+            if hasattr(os, "add_dll_directory"):
+                os.add_dll_directory(directory)
+            break
 
 
 def get_database_url() -> str:
@@ -19,6 +36,8 @@ def get_database_url() -> str:
 
 def get_engine(database_url: str | None = None) -> Engine:
     url = database_url or get_database_url()
+    if url.startswith("postgresql+psycopg"):
+        configure_postgres_client()
     connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
     return create_engine(url, echo=False, future=True, connect_args=connect_args)
 
@@ -38,6 +57,9 @@ def create_database(database_url: str | None = None) -> None:
     url = database_url or get_database_url()
     if url.startswith("sqlite"):
         return
+
+    configure_postgres_client()
+    import psycopg
 
     parsed = urlparse(url.replace("+psycopg", ""))
     db_name = parsed.path.lstrip("/")
