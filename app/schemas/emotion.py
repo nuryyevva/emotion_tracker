@@ -101,7 +101,6 @@ class EmotionRecordResponse(UUIDMixin, BaseSchema):
     note: Optional[str]
     record_date: date
     created_at: datetime
-    updated_at: datetime
 
 
 class MiniStats(BaseSchema):
