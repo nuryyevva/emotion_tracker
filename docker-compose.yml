@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: app/templates/Dockerfile
+    ports:
+      - "8090:80"
+    volumes:
+      - ./app/templates:/usr/share/nginx/html:ro

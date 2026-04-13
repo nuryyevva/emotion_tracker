@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трекер эмоций | Понимай своё состояние</title>
+    
+    <!-- Font Import (using Inter for clean, modern typography) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#F9FAFB', /* Very light gray */
+                            sage: '#A7B5A7', /* Sage Green */
+                            sageDark: '#7A8C7A',
+                            sand: '#EDE6DD', /* Warm neutral */
+                            sky: '#E3EDF5', /* Pastel blue */
+                            text: '#4B5563', /* Soft dark grey */
+                            heading: '#1F2937'
+                        }
+                    },
+                    borderRadius: {
+                        'xl': '1rem',
+                        '2xl': '1.5rem',
+                        '3xl': '2rem',
+                        'full': '9999px'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #fcfbfa; /* Slight warm tint */
+            color: #4B5563;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .blob-bg {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            z-index: -1;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(20px, -20px); }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden relative">
+
+    <!-- Background Elements -->
+    <div class="blob-bg bg-sky-200 w-96 h-96 top-0 left-0 -translate-x-1/2 -translate-y-1/2"></div>
+    <div class="blob-bg bg-brand-sage w-80 h-80 bottom-0 right-0 translate-x-1/3 translate-y-1/3"></div>
+
+    <!-- Navigation -->
+    <header class="fixed w-full top-0 z-50 transition-all duration-300 glass-card shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-brand-sky flex items-center justify-center text-brand-sageDark font-bold">T</div>
+                    <span class="font-semibold text-lg tracking-tight text-gray-800">Трекер эмоций</span>
+                </div>
+                
+                <!-- Desktop Nav -->
+                <nav class="hidden md:flex space-x-8 items-center">
+                    <a href="#about" class="text-gray-600 hover:text-brand-heading text-sm font-medium transition-colors">О нас</a>
+                    <a href="#features" class="text-gray-600 hover:text-brand-heading text-sm font-medium transition-colors">Функции</a>
+                    <a href="auth/login.html" class="text-brand-sageDark bg-brand-sand px-5 py-2.5 rounded-full text-sm font-medium hover:bg-white transition-all shadow-sm transform hover:-translate-y-0.5">Войти</a>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-600 hover:text-gray-900 focus:outline-none p-2">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white/90 backdrop-blur-md border-t border-gray-100 absolute w-full">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a href="#about" class="block px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-xl">О нас</a>
+                <a href="#features" class="block px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-xl">Функции</a>
+                <a href="auth/login.html" class="block px-3 py-3 text-base font-medium text-brand-sageDark hover:bg-brand-sand rounded-xl">Войти</a>
+                <a href="auth/login.html" class="mt-4 block w-full text-center bg-brand-heading text-white px-5 py-3 rounded-full font-medium">Попробовать бесплатно</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-24 pb-16 lg:pt-32 overflow-hidden">
+        
+        <!-- Hero Section -->
+        <section class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 mb-24">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <!-- Text Content -->
+                <div class="space-y-8 animate-fade-in-up">
+                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-brand-sage/20 text-brand-sageDark text-xs font-semibold uppercase tracking-wide">
+                        Забота о себе начинается здесь
+                    </div>
+                    
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-light text-gray-900 leading-[1.1]">
+                        Следи за своим состоянием за <span class="font-normal italic text-brand-sageDark">30 секунд в день</span>
+                    </h1>
+                    
+                    <p class="text-lg md:text-xl text-gray-600 leading-relaxed max-w-lg">
+                        Отслеживайте настроение, тревожность и усталость. Изучайте закономерности без сложных инструментов и лишнего шума.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <a href="auth/login.html" class="px-8 py-4 bg-brand-heading text-white rounded-full font-medium text-lg shadow-lg shadow-gray-200 hover:bg-gray-800 hover:-translate-y-1 transition-all duration-300 text-center">
+                            Попробовать бесплатно
+                        </a>
+                        <a href="#how-it-works" class="px-8 py-4 bg-white border border-gray-200 text-gray-700 rounded-full font-medium text-lg hover:bg-gray-50 transition-all duration-300 text-center flex items-center justify-center gap-2 group">
+                            <span>Как это работает?</span>
+                            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                        </a>
+                    </div>
+                    
+                    <!-- Value Badges -->
+                    <div class="flex gap-4 pt-8">
+                        <div class="flex items-center gap-2 text-sm font-medium text-gray-500">
+                            <svg class="w-5 h-5 text-brand-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Без давления
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-medium text-gray-500">
+                            <svg class="w-5 h-5 text-brand-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            Приватно
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-medium text-gray-500">
+                            <svg class="w-5 h-5 text-brand-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Просто
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Mockup -->
+                <div class="relative lg:h-auto flex justify-center">
+                    <!-- Decorative blurred elements behind phone -->
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-brand-sky/30 rounded-full blur-3xl -z-10"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-brand-sage/20 rounded-full blur-2xl -z-10 mix-blend-multiply"></div>
+                    
+                    <!-- Phone Frame -->
+                    <div class="relative mx-auto border-gray-800 bg-gray-800 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-2xl overflow-hidden">
+                        <div class="h-[32px] w-[3px] bg-gray-800 absolute -left-[17px] top-[72px] rounded-l-lg"></div>
+                        <div class="h-[46px] w-[3px] bg-gray-800 absolute -left-[17px] top-[124px] rounded-l-lg"></div>
+                        <div class="h-[46px] w-[3px] bg-gray-800 absolute -left-[17px] top-[178px] rounded-l-lg"></div>
+                        <div class="h-[64px] w-[3px] bg-gray-800 absolute -right-[17px] top-[142px] rounded-r-lg"></div>
+                        
+                        <!-- Screen Container -->
+                        <div class="rounded-[2rem] overflow-hidden w-full h-full bg-white relative flex flex-col">
+                            <!-- Header inside app -->
+                            <div class="p-6 pt-10">
+                                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1">Статистика</h3>
+                                <div class="h-32 w-full mt-4 relative">
+                                    <!-- Simple SVG Line Graph -->
+                                    <svg viewBox="0 0 200 80" class="w-full h-full preserve-3d">
+                                        <defs>
+                                            <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+                                                <stop offset="0%" stop-color="#8EBC89" stop-opacity="0.5"/>
+                                                <stop offset="100%" stop-color="#8EBC89" stop-opacity="0"/>
+                                            </linearGradient>
+                                        </defs>
+                                        <path d="M0,60 C30,60 20,40 50,40 C80,40 70,20 100,20 C130,20 120,50 150,50 C180,50 180,30 200,30" fill="url(#gradient)" stroke="#8EBC89" stroke-width="3" />
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <!-- Checklist area -->
+                            <div class="p-6 flex-1 flex flex-col justify-end bg-brand-sky/20 backdrop-blur-sm">
+                                <div class="mb-4">
+                                    <p class="text-sm font-medium text-gray-500 mb-3">Как вы себя чувствуете сейчас?</p>
+                                    <div class="flex gap-2">
+                                        <button class="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-xs font-medium shadow-sm border border-blue-200/50">Спокойно</button>
+                                        <button class="bg-brand-sand text-gray-600 px-4 py-2 rounded-full text-xs font-medium border border-gray-100">Усталость</button>
+                                        <button class="bg-orange-50 text-orange-400 px-4 py-2 rounded-full text-xs font-medium border border-orange-50">Тревога</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- App Footer -->
+                                <div class="flex justify-between items-center px-4 py-3 bg-white rounded-2xl shadow-sm mt-4">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-full bg-brand-sage"></div>
+                                        <div>
+                                            <p class="text-xs font-bold text-gray-800">День 14</p>
+                                            <p class="text-[10px] text-gray-400">Продолжайте!</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-brand-sageDark font-bold text-sm">30 сек</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating Element Card (Mockup of notification/stats) -->
+                    <div class="absolute bottom-12 -right-4 md:right-12 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 animate-bounce" style="animation-duration: 3s;">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-400">Ваша тревожность</p>
+                                <p class="text-sm font-bold text-gray-800">Низкая</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works / Features -->
+        <section id="features" class="py-20 bg-white/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-3xl font-light text-gray-900 mb-4">Три простых шага к ясности</h2>
+                    <p class="text-gray-500 text-lg">Мы убрали все лишнее, чтобы вы могли сосредоточиться на главном — своих чувствах.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Step 1 -->
+                    <div class="group bg-white p-8 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 border border-transparent hover:border-brand-sky/30">
+                        <div class="w-14 h-14 bg-brand-sky/50 rounded-2xl flex items-center justify-center text-brand-sageDark mb-6 group-hover:scale-110 transition-transform">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-medium text-gray-900 mb-3">Отметьте состояние (30 сек)</h3>
+                        <p class="text-gray-500 leading-relaxed">Быстрая чек-ин система позволяет оценить ваше текущее эмоциональное состояние без лишних вопросов.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="group bg-white p-8 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 border border-transparent hover:border-brand-sage/30">
+                        <div class="w-14 h-14 bg-brand-sage/50 rounded-2xl flex items-center justify-center text-brand-sageDark mb-6 group-hover:scale-110 transition-transform">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-medium text-gray-900 mb-3">Получите визуализацию</h3>
+                        <p class="text-gray-500 leading-relaxed">Ваши ответы складываются в красивые, спокойные графики, которые легко читать и интерпретировать.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="group bg-white p-8 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 border border-transparent hover:border-orange-100">
+                        <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-400 mb-6 group-hover:scale-110 transition-transform">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-medium text-gray-900 mb-3">Поймите свои паттерны</h3>
+                        <p class="text-gray-500 leading-relaxed">Приложение подскажет, что влияет на ваше настроение, помогая вам лучше понимать себя.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="py-24 relative overflow-hidden">
+             <div class="absolute inset-0 bg-brand-heading/5"></div>
+             <div class="max-w-4xl mx-auto px-4 relative z-10 text-center">
+                 <h2 class="text-3xl md:text-5xl font-light text-gray-900 mb-6">Начните путь к балансу уже сегодня</h2>
+                 <p class="text-gray-600 text-lg mb-10 max-w-2xl mx-auto">Присоединяйтесь к тысячам пользователей, которые начали бережно следить за своим ментальным здоровьем.</p>
+                 
+                 <a href="auth/login.html" class="inline-block px-10 py-5 bg-brand-sageDark text-white rounded-full font-medium text-lg shadow-lg shadow-brand-sage/40 hover:bg-white hover:text-brand-sageDark hover:border hover:border-brand-sageDark transition-all duration-300">
+                     Начать бесплатно
+                 </a>
+                 <!-- <p class="mt-6 text-xs text-gray-400">Кредитная карта не требуется • Аннулируйте в любой момент</p> --->
+             </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-brand-sky flex items-center justify-center text-xs text-brand-sageDark font-bold">T</div>
+                <span class="font-semibold text-gray-800 tracking-tight">Трекер эмоций</span>
+            </div>
+            
+            <div class="flex gap-6 text-sm text-gray-500">
+                <a href="#" class="hover:text-brand-heading transition-colors">Конфиденциальность</a>
+                <a href="#" class="hover:text-brand-heading transition-colors">Условия</a>
+                <a href="#" class="hover:text-brand-heading transition-colors">Помощь</a>
+            </div>
+            
+            <div class="text-sm text-gray-400">
+                &copy; 2026 Трекер эмоций. Все права защищены.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Menu Toggle
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                menu.classList.add('hidden'); // Close mobile menu on click
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
