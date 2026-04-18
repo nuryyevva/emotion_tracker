@@ -113,7 +113,13 @@ class EmotionRepository(BaseRepository[EmotionRecord]):
         return list(db.scalars(stmt))
 
     def get_latest(self, db: Session, *, user_id: UUID, days: int = 7) -> list[EmotionRecord]:
-        """Return the most recent ``days`` records for quick widgets and summaries."""
+        """Return the most recent ``days`` records for quick widgets and summaries.
+
+        Note:
+            Here ``days`` is currently interpreted as the number of latest
+            records, not as a strict calendar interval. If a user has gaps in
+            tracking, the method still returns up to N latest entries.
+        """
 
         records = self.list_by_user(db, user_id)
         return records[:days]

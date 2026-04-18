@@ -20,7 +20,14 @@ class BaseRepository(Generic[ModelType]):
     model: type[ModelType]
 
     def get(self, db: Session, id: UUID) -> ModelType | None:
-        """Return a single entity by primary key or ``None`` if it does not exist."""
+        """Return a single entity by primary key or ``None`` if it does not exist.
+
+        Important:
+            This helper expects the primary key value in its native Python type.
+            For the current project that means ``UUID`` for all main domain
+            entities. Passing a plain string UUID can break at the SQLAlchemy
+            type-processing stage instead of simply returning ``None``.
+        """
 
         return db.get(self.model, id)
 
@@ -73,7 +80,12 @@ class BaseRepository(Generic[ModelType]):
         return db_obj
 
     def remove(self, db: Session, *, id: UUID) -> ModelType | None:
-        """Delete an entity by primary key and return the deleted object if found."""
+        """Delete an entity by primary key and return the deleted object if found.
+
+        Important:
+            The ``id`` argument should be passed in the exact Python type used by
+            the ORM model primary key. In this project it is typically ``UUID``.
+        """
 
         db_obj = self.get(db, id)
         if db_obj is None:

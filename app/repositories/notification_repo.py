@@ -73,7 +73,13 @@ class NotificationRepository(BaseRepository[NotificationLog]):
         trigger_type: str,
         days: int = 7,
     ) -> list[NotificationLog]:
-        """Return the most recent notifications with the given trigger type."""
+        """Return the most recent notifications with the given trigger type.
+
+        Note:
+            The ``days`` parameter currently limits how many latest matching
+            notifications are returned. It does not yet filter by ``sent_at``
+            inside an actual rolling N-day time window.
+        """
 
         notifications = self.get_by_user(db, user_id=user_id)
         return [notification for notification in notifications if notification.trigger_type == trigger_type][:days]
