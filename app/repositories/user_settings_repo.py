@@ -6,11 +6,68 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.models import NotifyChannel, NotifyFrequency, UserSettings
+from app.repositories.base_repo import BaseRepository
 
 
-class UserSettingsRepository:
+class UserSettingsRepository(BaseRepository[UserSettings]):
+    """Repository for the one-to-one ``UserSettings`` profile."""
+
+    model = UserSettings
+
     def get_by_user(self, db: Session, user_id: UUID) -> UserSettings | None:
+        """Return notification/settings record for a user by primary key ``user_id``."""
+
         return db.get(UserSettings, user_id)
+
+    def create_default(self, db: Session, *, user_id: UUID) -> UserSettings:
+        """Create a default settings record for a newly registered user.
+
+        The exact defaults are opinionated project defaults and can later be
+        changed in one place without touching service logic.
+        """
+
+        settings = UserSettings(
+            user_id=user_id,
+            weekday_wake_up=time(7, 0),
+            weekday_bedtime=time(23, 0),
+            weekend_wake_up=time(9, 0),
+            weekend_bedtime=time(0, 0),
+            notify_channel=NotifyChannel.EMAIL,
+            notify_window_start=time(9, 0),
+            notify_window_end=time(21, 0),
+            notify_frequency=NotifyFrequency.DAILY,
+            reminders_enabled=True,
+        )
+        db.add(settings)
+        db.flush()
+        db.refresh(settings)
+        return settings
+
+    def update(
+        self,
+        db: Session,
+        *,
+        settings: UserSettings,
+        channel: NotifyChannel | None = None,
+        window_start: time | None = None,
+        window_end: time | None = None,
+        frequency: NotifyFrequency | None = None,
+        enabled: bool | None = None,
+    ) -> UserSettings:
+        """Update only the provided settings fields and leave the rest unchanged."""
+
+        update_data: dict[str, object] = {}
+        if channel is not None:
+            update_data["notify_channel"] = channel
+        if window_start is not None:
+            update_data["notify_window_start"] = window_start
+        if window_end is not None:
+            update_data["notify_window_end"] = window_end
+        if frequency is not None:
+            update_data["notify_frequency"] = frequency
+        if enabled is not None:
+            update_data["reminders_enabled"] = enabled
+        return super().update(db, db_obj=settings, obj_in=update_data)
 
     def upsert(
         self,
@@ -27,6 +84,12 @@ class UserSettingsRepository:
         notify_frequency: NotifyFrequency,
         reminders_enabled: bool,
     ) -> UserSettings:
+        """Create settings if they do not exist yet, otherwise fully overwrite them.
+
+        This method is convenient for forms that always submit the entire settings
+        payload at once.
+        """
+
         settings = db.get(UserSettings, user_id)
         if settings is None:
             settings = UserSettings(
