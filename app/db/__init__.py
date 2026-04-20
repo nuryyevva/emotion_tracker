@@ -1,16 +1,23 @@
-from app.models.enums import (
+from .db import create_database, create_tables, get_engine, get_session
+from app.core.database import Base
+from app.models import (
     DeliveryStatus,
+    EmotionRecord,
+    NotificationLog,
     NotifyChannel,
     NotifyFrequency,
+    Recommendation,
+    Subscription,
     SubscriptionStatus,
+    User,
+    UserCopingMethod,
+    UserHobby,
+    UserSettings,
     UserStatus,
 )
-from app.models.user import User, UserCopingMethod, UserHobby, UserSettings
-from app.models.emotion import EmotionRecord
-from app.models.subscription import Subscription
-from app.models.notification import NotificationLog, Recommendation
 
 __all__ = [
+    "Base",
     "User",
     "UserSettings",
     "EmotionRecord",
@@ -24,4 +31,8 @@ __all__ = [
     "NotifyFrequency",
     "SubscriptionStatus",
     "DeliveryStatus",
+    "create_database",
+    "create_tables",
+    "get_engine",
+    "get_session",
 ]
