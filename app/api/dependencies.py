@@ -45,6 +45,7 @@ from app.core.constants import (
 )
 from app.repositories.user_repo import UserRepository
 from app.repositories.subscription_repo import SubscriptionRepository
+from app.services.auth_service import AuthService
 # from app.services.subscription_service import SubscriptionService
 
 
@@ -123,6 +124,13 @@ def get_db() -> Generator[Session, None, None]:
         raise
     finally:
         db.close()
+
+
+def get_auth_service(
+        db: Annotated[Session, Depends(get_db)],
+) -> AuthService:
+    """Dependency provider for AuthService bound to current DB session."""
+    return AuthService(db)
 
 
 # =============================================================================
