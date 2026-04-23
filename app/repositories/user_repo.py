@@ -13,9 +13,12 @@ from app.repositories.base_repo import BaseRepository
 class UserRepository(BaseRepository[User]):
     """Repository responsible for reading and mutating ``User`` entities."""
 
+    def __init__(self, db: Session):
+        super().__init__(db)
+
     model = User
 
-    def get_by_id(self, db: Session, user_id: UUID) -> User | None:
+    def get_by_id(self, user_id: UUID) -> User | None:
         """Return a user by UUID.
 
         This is kept as an explicit domain method even though ``BaseRepository``
@@ -23,30 +26,30 @@ class UserRepository(BaseRepository[User]):
         like ``get_by_id``.
         """
 
-        return self.get(db, user_id)
+        return self.get(user_id)
 
-    def get_by_email(self, db: Session, email: str) -> User | None:
+    def get_by_email(self, email: str) -> User | None:
         """Return a user by email or ``None`` if such account does not exist."""
 
-        return db.scalar(select(User).where(User.email == email))
+        return self.db.scalar(select(User).where(User.email == email))
 
-    def list(self, db: Session) -> list[User]:
+    def list(self) -> list[User]:
         """Return all users ordered from newest to oldest."""
 
-        return list(db.scalars(select(User).order_by(User.created_at.desc())))
+        return list(self.db.scalars(select(User).order_by(User.created_at.desc())))
 
-    def update_timezone(self, db: Session, user: User, timezone: str) -> User:
+    def update_timezone(self, user: User, timezone: str) -> User:
         """Update the user's timezone and return the refreshed entity."""
 
         user.timezone = timezone
-        db.flush()
-        db.refresh(user)
+        self.db.flush()
+        self.db.refresh(user)
         return user
 
-    def update_status(self, db: Session, user: User, status: UserStatus) -> User:
+    def update_status(self, user: User, status: UserStatus) -> User:
         """Update the account status, for example ``active`` or ``blocked``."""
 
         user.status = status
-        db.flush()
-        db.refresh(user)
+        self.db.flush()
+        self.db.refresh(user)
         return user

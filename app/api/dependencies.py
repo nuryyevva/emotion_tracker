@@ -188,8 +188,8 @@ def get_current_user(
         )
 
     # Fetch user from database
-    user_repo = UserRepository()
-    user = user_repo.get_by_id(db, user_id)
+    user_repo = UserRepository(db)
+    user = user_repo.get_by_id(user_id)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -198,8 +198,8 @@ def get_current_user(
         )
 
     # Fetch subscription status
-    sub_repo = SubscriptionRepository()
-    subscription = sub_repo.get_by_user(db, user_id)
+    sub_repo = SubscriptionRepository(db)
+    subscription = sub_repo.get_by_user(user_id)
 
     # Build context
     if subscription:

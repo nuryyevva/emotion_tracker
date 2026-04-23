@@ -13,11 +13,13 @@ from app.schemas.common import DeliveryStatus
 class NotificationRepository(BaseRepository[NotificationLog]):
     """Repository for notification delivery history."""
 
+    def __init__(self, db: Session):
+        super().__init__(db)
+
     model = NotificationLog
 
     def create_log(
         self,
-        db: Session,
         *,
         user_id: UUID,
         recommendation_id: UUID | None,
@@ -28,7 +30,6 @@ class NotificationRepository(BaseRepository[NotificationLog]):
         """Create a notification log entry before or during delivery."""
 
         return self.create(
-            db,
             obj_in={
                 "user_id": user_id,
                 "recommendation_id": recommendation_id,
@@ -38,25 +39,23 @@ class NotificationRepository(BaseRepository[NotificationLog]):
             },
         )
 
-    def mark_as_sent(self, db: Session, *, notification: NotificationLog) -> NotificationLog:
+    def mark_as_sent(self, *, notification: NotificationLog) -> NotificationLog:
         """Mark an existing notification as successfully delivered."""
 
         return self.update(
-            db,
             db_obj=notification,
             obj_in={"delivery_status": DeliveryStatus.SENT},
         )
 
-    def mark_as_failed(self, db: Session, *, notification: NotificationLog) -> NotificationLog:
+    def mark_as_failed(self, *, notification: NotificationLog) -> NotificationLog:
         """Mark an existing notification as failed."""
 
         return self.update(
-            db,
             db_obj=notification,
             obj_in={"delivery_status": DeliveryStatus.FAILED},
         )
 
-    def get_by_user(self, db: Session, *, user_id: UUID) -> list[NotificationLog]:
+    def get_by_user(self, *, user_id: UUID) -> list[NotificationLog]:
         """Return notification history for a user ordered from newest to oldest."""
 
         stmt = (
@@ -64,11 +63,10 @@ class NotificationRepository(BaseRepository[NotificationLog]):
             .where(NotificationLog.user_id == user_id)
             .order_by(NotificationLog.sent_at.desc())
         )
-        return list(db.scalars(stmt))
+        return list(self.db.scalars(stmt))
 
     def get_recent_by_trigger(
         self,
-        db: Session,
         *,
         user_id: UUID,
         trigger_type: str,
@@ -82,5 +80,5 @@ class NotificationRepository(BaseRepository[NotificationLog]):
             inside an actual rolling N-day time window.
         """
 
-        notifications = self.get_by_user(db, user_id=user_id)
+        notifications = self.get_by_user(user_id=user_id)
         return [notification for notification in notifications if notification.trigger_type == trigger_type][:days]
