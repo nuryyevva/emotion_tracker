@@ -14,15 +14,6 @@ class UserCopingMethodRepository(BaseRepository[UserCopingMethod]):
 
     model = UserCopingMethod
 
-    def add(self, db: Session, *, user_id: UUID, method: str) -> UserCopingMethod:
-        """Attach a coping method to the user."""
-
-        coping_method = UserCopingMethod(user_id=user_id, method=method)
-        db.add(coping_method)
-        db.flush()
-        db.refresh(coping_method)
-        return coping_method
-
     def list_by_user(self, db: Session, user_id: UUID) -> list[UserCopingMethod]:
         """Return all coping methods of the user ordered from newest to oldest."""
 
@@ -47,17 +38,12 @@ class UserCopingMethodRepository(BaseRepository[UserCopingMethod]):
         )
         return db.scalar(stmt)
 
-    def remove(self, db: Session, *, user_id: UUID, method: str) -> bool:
-        """Delete a coping method entry and return whether anything was deleted."""
-
-        stmt = delete(UserCopingMethod).where(
-            UserCopingMethod.user_id == user_id,
-            UserCopingMethod.method == method,
-        )
-        result = db.execute(stmt)
-        return result.rowcount > 0
-
     def delete_by_user_and_name(self, db: Session, *, user_id: UUID, method: str) -> bool:
         """Architecture-friendly alias for deleting by method name."""
 
-        return self.remove(db, user_id=user_id, method=method)
+        obj = self.get_by_user_and_name(db, user_id=user_id, method=method)
+        if obj:
+            db.delete(obj)
+            db.commit()
+            return True
+        return False

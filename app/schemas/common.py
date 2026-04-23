@@ -17,6 +17,7 @@ class NotificationChannel(str, Enum):
     """Notification delivery channels."""
     EMAIL = "email"
     TELEGRAM = "telegram"
+    BOTH = "both"
 
 
 class SubscriptionPlan(str, Enum):
@@ -29,15 +30,16 @@ class SubscriptionStatus(str, Enum):
     """Subscription status."""
     ACTIVE = "active"
     EXPIRED = "expired"
-    CANCELLED = "cancelled"
-    PENDING = "pending"
+    CANCELED = "canceled"
+    TRIAL = "trial"
 
 
 class DeliveryStatus(str, Enum):
     """Notification delivery status."""
-    PENDING = "pending"
+    QUEUED = "queued"
     SENT = "sent"
     FAILED = "failed"
+    READ = "read"
 
 
 class MetricType(str, Enum):
@@ -62,6 +64,22 @@ class TriggerType(str, Enum):
     MOOD_IMPROVEMENT = "mood_improvement"
     SLEEP_DEVIATION = "sleep_deviation"
 
+
+
+class UserStatus(str, Enum):
+    ACTIVE = "active"
+    BLOCKED = "blocked"
+    DELETED = "deleted"
+
+
+class NotifyFrequency(str, Enum):
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    SMART = "smart"
+
+
+def enum_values(enum_cls: type[Enum]) -> list[str]:
+    return [member.value for member in enum_cls]
 
 # =============================================================================
 # BASE SCHEMAS & MIXINS

@@ -14,15 +14,6 @@ class UserHobbyRepository(BaseRepository[UserHobby]):
 
     model = UserHobby
 
-    def add(self, db: Session, *, user_id: UUID, hobby: str) -> UserHobby:
-        """Attach a new hobby string to the user."""
-
-        user_hobby = UserHobby(user_id=user_id, hobby=hobby)
-        db.add(user_hobby)
-        db.flush()
-        db.refresh(user_hobby)
-        return user_hobby
-
     def list_by_user(self, db: Session, user_id: UUID) -> list[UserHobby]:
         """Return all hobbies of the user ordered from newest to oldest."""
 
@@ -40,14 +31,12 @@ class UserHobbyRepository(BaseRepository[UserHobby]):
         stmt = select(UserHobby).where(UserHobby.user_id == user_id, UserHobby.hobby == hobby)
         return db.scalar(stmt)
 
-    def remove(self, db: Session, *, user_id: UUID, hobby: str) -> bool:
-        """Delete a hobby entry and return ``True`` if a row was removed."""
-
-        stmt = delete(UserHobby).where(UserHobby.user_id == user_id, UserHobby.hobby == hobby)
-        result = db.execute(stmt)
-        return result.rowcount > 0
-
     def delete_by_user_and_name(self, db: Session, *, user_id: UUID, hobby: str) -> bool:
         """Architecture-friendly alias for deleting a hobby by its name."""
 
-        return self.remove(db, user_id=user_id, hobby=hobby)
+        obj = self.get_by_user_and_name(db, user_id=user_id, hobby=hobby)
+        if obj:
+            db.delete(obj)
+            db.commit()
+            return True
+        return False

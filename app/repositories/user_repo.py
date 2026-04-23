@@ -5,7 +5,8 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import User, UserStatus
+from app.models import User
+from app.schemas.common import UserStatus
 from app.repositories.base_repo import BaseRepository
 
 
@@ -13,36 +14,6 @@ class UserRepository(BaseRepository[User]):
     """Repository responsible for reading and mutating ``User`` entities."""
 
     model = User
-
-    def create(
-        self,
-        db: Session,
-        *,
-        email: str,
-        password_hash: str,
-        timezone: str,
-        status: UserStatus = UserStatus.ACTIVE,
-    ) -> User:
-        """Create a new user with the minimal required account fields.
-
-        Args:
-            db: Active SQLAlchemy session.
-            email: Unique login email.
-            password_hash: Already hashed password value.
-            timezone: User timezone string used by reminders and date logic.
-            status: Initial user status. Defaults to ``active``.
-        """
-
-        user = User(
-            email=email,
-            password_hash=password_hash,
-            timezone=timezone,
-            status=status,
-        )
-        db.add(user)
-        db.flush()
-        db.refresh(user)
-        return user
 
     def get_by_id(self, db: Session, user_id: UUID) -> User | None:
         """Return a user by UUID.

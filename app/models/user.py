@@ -12,8 +12,8 @@ try:
 except ModuleNotFoundError:
     from core.database import Base
 
-from .enums import NotifyChannel, NotifyFrequency, UserStatus, enum_values
-
+from .enums import NotifyFrequency, UserStatus, enum_values
+from app.schemas.common import NotificationChannel
 
 class User(Base):
     __tablename__ = "users"
@@ -73,11 +73,11 @@ class UserSettings(Base):
     weekday_bedtime: Mapped[time] = mapped_column(nullable=False)
     weekend_wake_up: Mapped[time] = mapped_column(nullable=False)
     weekend_bedtime: Mapped[time] = mapped_column(nullable=False)
-    notify_channel: Mapped[NotifyChannel] = mapped_column(
-        Enum(NotifyChannel, name="notify_channel", values_callable=enum_values),
+    notify_channel: Mapped[NotificationChannel] = mapped_column(
+        Enum(NotificationChannel, name="notify_channel", values_callable=enum_values),
         nullable=False,
-        server_default=NotifyChannel.EMAIL.value,
-        default=NotifyChannel.EMAIL,
+        server_default=NotificationChannel.EMAIL.value,
+        default=NotificationChannel.EMAIL,
     )
     notify_window_start: Mapped[time] = mapped_column(nullable=False)
     notify_window_end: Mapped[time] = mapped_column(nullable=False)
