@@ -10,6 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.repositories.emotion_repo import EmotionRepository
 from app.services.notification_service import NotificationService
+from app.utils import (
+    calculate_moving_average,
+    categorize_trigger,
+    detect_consecutive_threshold,
+    validate_note_content,
+)
 from app.schemas.emotion import (
     EmotionRecordResponse,
     EmotionRecordWithStats,
@@ -47,9 +53,14 @@ class EmotionService:
         if not records:
             return None
 
-        avg_mood = sum(r.mood for r in records) / len(records)
-        avg_anxiety = sum(r.anxiety for r in records) / len(records)
-        avg_fatigue = sum(r.fatigue for r in records) / len(records)
+        mood_values = [r.mood for r in records]
+        anxiety_values = [r.anxiety for r in records]
+        fatigue_values = [r.fatigue for r in records]
+        window_size = len(records)
+
+        avg_mood = calculate_moving_average(mood_values, window_size=window_size)[0]
+        avg_anxiety = calculate_moving_average(anxiety_values, window_size=window_size)[0]
+        avg_fatigue = calculate_moving_average(fatigue_values, window_size=window_size)[0]
 
         return MiniStats(
             last_7_days_avg={
@@ -83,14 +94,31 @@ class EmotionService:
         sleep_hours = data.get("sleep_hours")
         note = (data.get("note") or "").lower()
 
-        if isinstance(mood, int) and mood <= 3:
-            triggers.append("low_mood")
-        if isinstance(anxiety, int) and anxiety >= 8:
+        if isinstance(mood, int):
+            mood_trigger = categorize_trigger(metric="intensity", value=mood)
+            if mood_trigger == "low_intensity":
+                triggers.append("low_mood")
+
+        if isinstance(anxiety, int) and detect_consecutive_threshold(
+            records=[{"anxiety": anxiety}],
+            metric_name="anxiety",
+            threshold=8,
+            consecutive_days=1,
+        ):
             triggers.append("high_anxiety")
-        if isinstance(fatigue, int) and fatigue >= 8:
+
+        if isinstance(fatigue, int) and detect_consecutive_threshold(
+            records=[{"fatigue": fatigue}],
+            metric_name="fatigue",
+            threshold=8,
+            consecutive_days=1,
+        ):
             triggers.append("high_fatigue")
-        if sleep_hours is not None and sleep_hours < 6:
-            triggers.append("sleep_deprivation")
+
+        if sleep_hours is not None:
+            sleep_trigger = categorize_trigger(metric="sleep_hours", value=int(sleep_hours))
+            if sleep_trigger == "sleep_deprivation":
+                triggers.append(sleep_trigger)
 
         return list(dict.fromkeys(triggers))
 
@@ -116,6 +144,13 @@ class EmotionService:
         if sleep_hours is not None:
             sleep_hours = Decimal(str(sleep_hours))
 
+        note = data.get("note")
+        if note is not None:
+            note_validation = validate_note_content(note)
+            if not note_validation["is_valid"]:
+                raise ValueError(note_validation["error"])
+            note = note_validation["sanitized"]
+
         record = self.repo.create(
             self.db,
             user_id=user_id,
@@ -124,7 +159,7 @@ class EmotionService:
             anxiety=data["anxiety"],
             fatigue=data["fatigue"],
             sleep_hours=sleep_hours,
-            note=data.get("note")
+            note=note
         )
 
         mini_stats = self._calculate_mini_stats(user_id)
@@ -216,7 +251,10 @@ class EmotionService:
         if "sleep_hours" in data:
             update_data["sleep_hours"] = Decimal(str(data["sleep_hours"])) if data["sleep_hours"] else None
         if "note" in data:
-            update_data["note"] = data["note"]
+            note_validation = validate_note_content(data["note"])
+            if not note_validation["is_valid"]:
+                raise ValueError(note_validation["error"])
+            update_data["note"] = note_validation["sanitized"]
 
         if update_data:
             record = self.repo.update(db_obj=record, obj_in=update_data)
