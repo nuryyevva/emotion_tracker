@@ -15,10 +15,11 @@ pydantic-settings = "^2.1.0"
 requests = "^2.33.1"
 celery = "^5.6.3"
 passlib = "^1.7.4"
-python-jose = "^3.5.0"
+python-jose = {extras = ["cryptography"], version = "^3.5.0"}
 sqlalchemy = "^2.0.48"
 psycopg = "^3.2.9"
 alembic = "^1.16.5"
+python-multipart = "^0.0.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"
