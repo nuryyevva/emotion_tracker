@@ -7,13 +7,8 @@ from sqlalchemy import Boolean, CheckConstraint, DateTime, Enum, ForeignKey, Ind
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-try:
-    from app.core.database import Base
-except ModuleNotFoundError:
-    from core.database import Base
-
-from .enums import NotifyFrequency, UserStatus, enum_values
-from app.schemas.common import NotificationChannel
+from app.core.database import Base
+from app.schemas.common import NotifyFrequency, UserStatus, enum_values, NotificationChannel
 
 class User(Base):
     __tablename__ = "users"
