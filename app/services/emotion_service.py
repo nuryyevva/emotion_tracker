@@ -1,20 +1,19 @@
 """
 Сервис эмоций
 """
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from uuid import UUID
 from typing import Dict, Any, List, Optional
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from ..repositories.emotion_repo import EmotionRepository
-from ..services.notification_service import NotificationService
-from ..schemas.emotion import (
+from app.repositories.emotion_repo import EmotionRepository
+from app.services.notification_service import NotificationService
+from app.schemas.emotion import (
     EmotionRecordResponse,
     EmotionRecordWithStats,
     TodayRecordResponse,
-    EmotionRecordList,
     MiniStats,
 )
 
@@ -74,6 +73,27 @@ class EmotionService:
             created_at=record.created_at
         )
 
+    @staticmethod
+    def _detect_triggers(data: Dict[str, Any]) -> List[str]:
+        """Эвристическое определение триггеров по метрикам и заметке."""
+        triggers: List[str] = []
+        mood = data.get("mood")
+        anxiety = data.get("anxiety")
+        fatigue = data.get("fatigue")
+        sleep_hours = data.get("sleep_hours")
+        note = (data.get("note") or "").lower()
+
+        if isinstance(mood, int) and mood <= 3:
+            triggers.append("low_mood")
+        if isinstance(anxiety, int) and anxiety >= 8:
+            triggers.append("high_anxiety")
+        if isinstance(fatigue, int) and fatigue >= 8:
+            triggers.append("high_fatigue")
+        if sleep_hours is not None and sleep_hours < 6:
+            triggers.append("sleep_deprivation")
+
+        return list(dict.fromkeys(triggers))
+
     def create_record(self, user_id: UUID, data: Dict[str, Any]) -> EmotionRecordWithStats:
         """
         Создание записи эмоции
@@ -108,10 +128,12 @@ class EmotionService:
         )
 
         mini_stats = self._calculate_mini_stats(user_id)
+        triggers_detected = self._detect_triggers(data)
 
         return EmotionRecordWithStats(
             **self._to_response(record).model_dump(),
-            mini_stats=mini_stats
+            mood_stats=mini_stats,
+            triggers_detected=triggers_detected,
         )
 
     def get_today_record(self, user_id: UUID) -> TodayRecordResponse:
@@ -138,7 +160,8 @@ class EmotionService:
             self,
             user_id: UUID,
             start_date: date,
-            end_date: date
+            end_date: date,
+            limit: int
     ) -> List[EmotionRecordResponse]:
         """
         Получение истории эмоций за период
@@ -147,15 +170,17 @@ class EmotionService:
             user_id: ID пользователя
             start_date: Начальная дата
             end_date: Конечная дата
+            limit: Максимальное число записей
 
         Returns:
             list[EmotionRecordResponse]: Список записей эмоций
         """
-        records = self.repo.list_by_user_and_period(
+        records = self.repo.get_by_user_date_range(
             self.db,
             user_id=user_id,
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            limit=limit,
         )
 
         return [self._to_response(r) for r in records]
@@ -197,7 +222,9 @@ class EmotionService:
         if update_data:
             record = self.repo.update(self.db, db_obj=record, obj_in=update_data)
 
-        return self._to_response(record)
+        response = self._to_response(record)
+        response.updated_at = datetime.utcnow()
+        return response
 
     def delete_record(self, user_id: UUID, record_id: UUID) -> bool:
         """
@@ -217,6 +244,3 @@ class EmotionService:
 
         deleted = self.repo.remove(self.db, id=record_id)
         return deleted is not None
-
-
-from datetime import timedelta

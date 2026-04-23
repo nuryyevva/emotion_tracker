@@ -2,8 +2,6 @@
 Сервис уведомлений
 """
 from uuid import UUID
-from typing import List, Optional
-from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -11,7 +9,7 @@ from ..repositories.notification_repo import NotificationRepository
 from ..services.recommendation_service import RecommendationService
 from ..services.user_service import UserService
 from ..schemas.notification import NotificationLogResponse, NotificationList
-from ..models import DeliveryStatus, NotificationLog
+from ..models import NotificationLog
 
 
 # Заглушка для Telegram клиента

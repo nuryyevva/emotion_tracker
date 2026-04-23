@@ -1,166 +1,109 @@
 from __future__ import annotations
 
-from decimal import Decimal
+from datetime import date, timedelta
+from typing import Annotated, Optional
+from sqlalchemy.orm import Session
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from app.core.database import get_db
-from app.models import EmotionRecord
-from app.schemas.emotion import EmotionRecordCreate, EmotionRecordList, EmotionRecordResponse
+from app.api.dependencies import CurrentUserContext, get_current_user, get_db
+from app.schemas.emotion import (
+    EmotionRecordCreate,
+    EmotionRecordList,
+    EmotionRecordUpdate,
+    EmotionRecordWithStats,
+    TodayRecordResponse,
+    EmotionRecordResponse,
+    DeleteMessageResponse,
+)
+from app.services.emotion_service import EmotionService
 
-router = APIRouter(prefix='/emotions')
+router = APIRouter(prefix="/emotions")
 
 
-@router.post("/", response_model=EmotionRecordResponse, status_code=status.HTTP_201_CREATED)
+def get_emotion_service(
+        db: Annotated[Session, Depends(get_db)],
+) -> EmotionService:
+    """Dependency provider for EmotionService bound to current DB session."""
+    return EmotionService(db)
+
+
+@router.post("/", response_model=EmotionRecordWithStats, status_code=status.HTTP_201_CREATED)
 def create_emotion(
     payload: EmotionRecordCreate,
-    user_id: UUID = Query(...),
-    db: Session = Depends(get_db),
-) -> EmotionRecordResponse:
-    existing = db.scalar(
-        select(EmotionRecord).where(
-            EmotionRecord.user_id == str(user_id),
-            EmotionRecord.record_date == payload.record_date,
-        )
-    )
-    if existing is not None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Emotion record already exists for this date")
+    user: Annotated[CurrentUserContext, Depends(get_current_user)],
+    service: Annotated[EmotionService, Depends(get_emotion_service)],
+) -> EmotionRecordWithStats:
+    try:
+        return service.create_record(user.user_id, payload.model_dump(exclude_none=True))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    record = EmotionRecord(
-        user_id=str(user_id),
-        record_date=payload.record_date,
-        mood=payload.mood,
-        anxiety=payload.anxiety,
-        fatigue=payload.fatigue,
-        sleep_hours=Decimal(str(payload.sleep_hours)) if payload.sleep_hours is not None else None,
-        note=payload.note,
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-    return EmotionRecordResponse.model_validate(record)
+
+@router.get("/today", response_model=TodayRecordResponse)
+def get_today_emotion(
+    user: Annotated[CurrentUserContext, Depends(get_current_user)],
+    service: Annotated[EmotionService, Depends(get_emotion_service)],
+) -> TodayRecordResponse:
+    return service.get_today_record(user.user_id)
 
 
 @router.get("/", response_model=EmotionRecordList)
-def list_emotions(user_id: UUID = Query(...), db: Session = Depends(get_db)) -> EmotionRecordList:
-    records = list(
-        db.scalars(
-            select(EmotionRecord)
-            .where(EmotionRecord.user_id == str(user_id))
-            .order_by(EmotionRecord.record_date.desc())
+def get_emotions(
+    user: Annotated[CurrentUserContext, Depends(get_current_user)],
+    service: Annotated[EmotionService, Depends(get_emotion_service)],
+    start_date: Optional[date] = Query(default=None),
+    end_date: Optional[date] = Query(default=None),
+    limit: int = Query(default=30, ge=1, le=365),
+) -> EmotionRecordList:
+    today = date.today()
+    if end_date is None:
+        end_date = today
+    if start_date is None:
+        start_date = end_date - timedelta(days=29)
+
+    if start_date > end_date:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="start_date must be <= end_date")
+
+    items = service.get_history(
+        user_id=user.user_id,
+        start_date=start_date,
+        end_date=end_date,
+        limit=limit,
+    )
+    return EmotionRecordList(
+        items=items,
+        total=len(items),
+        period={"start_date": start_date, "end_date": end_date},
+    )
+
+
+@router.put("/{emotion_id}", response_model=EmotionRecordResponse)
+def update_emotion(
+    emotion_id: UUID,
+    payload: EmotionRecordUpdate,
+    user: Annotated[CurrentUserContext, Depends(get_current_user)],
+    service: Annotated[EmotionService, Depends(get_emotion_service)],
+) -> EmotionRecordResponse:
+    try:
+        updated = service.update_record(
+            user_id=user.user_id,
+            record_id=emotion_id,
+            data=payload.model_dump(exclude_none=True),
         )
-    )
-
-    items = [EmotionRecordResponse.model_validate(record) for record in records]
-    if records:
-        period = {"start_date": records[-1].record_date, "end_date": records[0].record_date}
-    else:
-        period = {}
-    return EmotionRecordList(items=items, total=len(items), period=period)
+        return updated
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-
-
-from fastapi import APIRouter, HTTPException, status, Query
-from pydantic import BaseModel
-from typing import Optional, List
-from datetime import date, datetime
-from uuid import uuid4
-
-router = APIRouter(prefix="/emotions", tags=["Emotions"])
-
-
-class EmotionResponse(BaseModel):
-    id: str
-    user_id: str
-    emotion_type: str
-    intensity: int
-    note: Optional[str]
-    triggers: Optional[List[str]]
-    created_at: datetime
-    date: date
-
-
-class EmotionCreateRequest(BaseModel):
-    emotion_type: str
-    intensity: int
-    note: Optional[str] = None
-    triggers: Optional[List[str]] = None
-    date: Optional[date] = None
-
-
-class EmotionUpdateRequest(BaseModel):
-    emotion_type: Optional[str] = None
-    intensity: Optional[int] = None
-    note: Optional[str] = None
-    triggers: Optional[List[str]] = None
-    date: Optional[date] = None
-
-
-class EmotionTodayResponse(BaseModel):
-    has_emotion: bool
-    emotion: Optional[EmotionResponse]
-    suggestion: Optional[str]
-
-
-class EmotionStatsResponse(BaseModel):
-    total_entries: int
-    average_intensity: float
-    most_common_emotion: str
-    emotion_distribution: dict
-    intensity_trend: List[dict]
-    period_days: int
-
-
-@router.get("/emotions/today", response_model=EmotionTodayResponse)
-async def get_emotions_today():
-    return EmotionTodayResponse(
-        has_emotion=True,
-        emotion=EmotionResponse(
-            id=str(uuid4()),
-            user_id=str(uuid4()),
-            emotion_type="happy",
-            intensity=7,
-            note="Had a great day!",
-            triggers=["friends", "sunny_weather"],
-            created_at=datetime.now(),
-            date=date.today()
-        ),
-        suggestion="Keep up the positive energy!"
-    )
-
-
-@router.post("/emotions", response_model=EmotionResponse, status_code=status.HTTP_201_CREATED)
-async def post_emotions(request: EmotionCreateRequest):
-    return EmotionResponse(
-        id=str(uuid4()),
-        user_id=str(uuid4()),
-        emotion_type=request.emotion_type,
-        intensity=request.intensity,
-        note=request.note,
-        triggers=request.triggers,
-        created_at=datetime.now(),
-        date=request.date or date.today()
-    )
-
-
-@router.put("/emotions/{emotion_id}", response_model=EmotionResponse)
-async def put_emotions_emotion_id(emotion_id: str, request: EmotionUpdateRequest):
-    return EmotionResponse(
-        id=emotion_id,
-        user_id=str(uuid4()),
-        emotion_type=request.emotion_type or "calm",
-        intensity=request.intensity or 5,
-        note=request.note,
-        triggers=request.triggers,
-        created_at=datetime.now(),
-        date=request.date or date.today()
-    )
-
-
-@router.delete("/emotions/{emotion_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_emotions_emotion_id(emotion_id: str):
-    return None
+@router.delete("/{emotion_id}", response_model=DeleteMessageResponse)
+def delete_emotion(
+    emotion_id: UUID,
+    user: Annotated[CurrentUserContext, Depends(get_current_user)],
+    service: Annotated[EmotionService, Depends(get_emotion_service)],
+) -> DeleteMessageResponse:
+    deleted = service.delete_record(user.user_id, emotion_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
+    return DeleteMessageResponse(message="Record deleted successfully")

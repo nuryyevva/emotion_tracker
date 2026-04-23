@@ -1,15 +1,24 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 from app.schemas.auth import (
     TokenResponse, UserLogin, UserRegister, PasswordResetResponse,
     TokenRefreshResponse, TokenRefreshRequest, PasswordResetRequest, PasswordResetConfirm
 )
 from app.services.auth_service import AuthService
-from app.api.dependencies import get_auth_service
+from app.api.dependencies import get_db
 from app.core.exceptions import InvalidCredentialsException
 
 router = APIRouter(prefix="/auth")
+
+
+def get_auth_service(
+        db: Annotated[Session, Depends(get_db)],
+) -> AuthService:
+    """Dependency provider for AuthService bound to current DB session."""
+    return AuthService(db)
+
 
 @router.post("/register", response_model=TokenResponse)
 async def register(

@@ -15,7 +15,6 @@ from uuid import UUID
 from pydantic import Field
 
 from .common import BaseSchema, UUIDMixin
-# from .analytics import TrendInsight
 
 
 # =============================================================================
@@ -110,8 +109,8 @@ class MiniStats(BaseSchema):
 
 class EmotionRecordWithStats(EmotionRecordResponse):
     """Emotion record with mini statistics and triggers."""
-    mini_stats: Optional[MiniStats] = None
-    # triggers_detected: Optional[List[TrendInsight]] = None
+    mood_stats: Optional[MiniStats] = None
+    triggers_detected: List[str] = Field(default_factory=list)
 
 
 class TodayRecordResponse(BaseSchema):
@@ -133,3 +132,6 @@ class EmotionRecordList(BaseSchema):
     items: List[EmotionRecordResponse]
     total: int
     period: dict[str, date]
+
+class DeleteMessageResponse(BaseSchema):
+    message: str
