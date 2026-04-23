@@ -27,6 +27,7 @@ from app.core.security import (
     verify_token,
 )
 from app.core.config import settings
+from app.core.exceptions import InvalidCredentialsException
 
 
 class AuthService:
@@ -103,7 +104,7 @@ class AuthService:
         user = self.user_repo.get_by_email(self.db, user_login.email)
 
         if not user or not verify_password(user_login.password, user.password_hash):
-            raise ValueError("Invalid email or password")
+            raise InvalidCredentialsException()
 
         if user.status != UserStatus.ACTIVE:
             raise ValueError("Account is not active")

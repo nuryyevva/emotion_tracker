@@ -4,7 +4,7 @@ from typing import Optional, List
 from datetime import datetime
 from uuid import uuid4
 
-router = APIRouter(prefix="/notifications", tags=["Notifications"])
+router = APIRouter(prefix="/notifications")
 
 
 class NotificationResponse(BaseModel):

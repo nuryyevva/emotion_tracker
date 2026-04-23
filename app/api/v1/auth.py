@@ -7,8 +7,9 @@ from app.schemas.auth import (
 )
 from app.services.auth_service import AuthService
 from app.api.dependencies import get_auth_service
+from app.core.exceptions import InvalidCredentialsException
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth")
 
 @router.post("/register", response_model=TokenResponse)
 async def register(
@@ -30,6 +31,9 @@ async def login(
         return auth_service.login(payload)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except InvalidCredentialsException as e:
+        raise e
+
 
 
 @router.post("/refresh", response_model=TokenRefreshResponse)

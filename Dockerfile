@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml poetry.lock ./
 
 RUN pip install --no-cache-dir --upgrade pip poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --only main --no-interaction --no-ansi
+    #poetry config virtualenvs.create false && \
+    poetry install #--only main --no-interaction --no-ansi
 
 COPY . .
 

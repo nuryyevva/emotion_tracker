@@ -5,8 +5,9 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import DeliveryStatus, NotificationLog
+from app.models import NotificationLog
 from app.repositories.base_repo import BaseRepository
+from app.schemas.common import DeliveryStatus
 
 
 class NotificationRepository(BaseRepository[NotificationLog]):

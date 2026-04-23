@@ -17,14 +17,14 @@ from app.schemas.user import (
 )
 from app.services.user_service import UserService
 
-router = APIRouter(tags=["Users"])
+router = APIRouter(prefix="/users")
 
 
 def get_user_service(db: Annotated[Session, Depends(get_db)]) -> UserService:
     return UserService(db)
 
 
-@router.get("/users/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse)
 def get_users_me(
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
     service: Annotated[UserService, Depends(get_user_service)],
@@ -32,7 +32,7 @@ def get_users_me(
     return service.get_profile(user.user_id)
 
 
-@router.put("/users/me", response_model=UserResponse)
+@router.put("/me", response_model=UserResponse)
 def put_users_me(
     payload: UserUpdate,
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
@@ -43,7 +43,7 @@ def put_users_me(
     return updated
 
 
-@router.delete("/users/me", response_model=MessageResponse)
+@router.delete("/me", response_model=MessageResponse)
 def delete_users_me(
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
     service: Annotated[UserService, Depends(get_user_service)],
@@ -53,7 +53,7 @@ def delete_users_me(
     return MessageResponse(message="User deleted successfully.")
 
 
-@router.get("/users/me/settings", response_model=UserSettingsResponse)
+@router.get("/me/settings", response_model=UserSettingsResponse)
 def get_users_me_settings(
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
     service: Annotated[UserService, Depends(get_user_service)],
@@ -61,7 +61,7 @@ def get_users_me_settings(
     return service.get_settings(user.user_id)
 
 
-@router.put("/users/me/settings", response_model=UserSettingsResponse)
+@router.put("/me/settings", response_model=UserSettingsResponse)
 def put_users_me_settings(
     payload: UserSettingsUpdate,
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
@@ -72,7 +72,7 @@ def put_users_me_settings(
     return updated
 
 
-@router.post("/users/me/settings/hobbies", response_model=HobbyResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/me/settings/hobbies", response_model=HobbyResponse, status_code=status.HTTP_201_CREATED)
 def post_users_me_settings_hobbies(
     payload: HobbyCreate,
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
@@ -83,7 +83,7 @@ def post_users_me_settings_hobbies(
     return hobby
 
 
-@router.delete("/users/me/settings/hobbies/{hobby}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/me/settings/hobbies/{hobby}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_users_me_settings_hobbies_hobby(
     hobby: str,
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
@@ -95,7 +95,7 @@ def delete_users_me_settings_hobbies_hobby(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/users/me/settings/coping-methods", response_model=CopingMethodResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/me/settings/coping-methods", response_model=CopingMethodResponse, status_code=status.HTTP_201_CREATED)
 def post_users_me_settings_coping_methods(
     payload: CopingMethodCreate,
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
@@ -106,7 +106,7 @@ def post_users_me_settings_coping_methods(
     return method
 
 
-@router.delete("/users/me/settings/coping-methods/{method}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/me/settings/coping-methods/{method}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_users_me_settings_coping_methods_method(
     method: str,
     user: Annotated[CurrentUserContext, Depends(get_current_user)],
