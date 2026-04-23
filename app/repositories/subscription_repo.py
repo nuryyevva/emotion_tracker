@@ -6,9 +6,9 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Subscription, SubscriptionStatus
+from app.models import Subscription
 from app.repositories.base_repo import BaseRepository
-
+from app.schemas.common import SubscriptionStatus
 
 class SubscriptionRepository(BaseRepository[Subscription]):
     """Repository for subscription history and current billing state."""

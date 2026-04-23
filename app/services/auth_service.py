@@ -1,54 +1,33 @@
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def register_user(payload: UserRegister, db: Session = Depends(get_db)) -> TokenResponse:
-    existing_user = db.scalar(select(User).where(User.email == payload.email))
-    if existing_user is not None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-
-    user = User(
-        email=payload.email,
-        password_hash=get_password_hash(payload.password),
-        timezone=payload.timezone,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    token = create_access_token(
-        {"sub": user.id},
-        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-    )
-    return TokenResponse(access_token=token, user=user)
-
-
-@router.post("/login", response_model=TokenResponse)
-def login_user(payload: UserLogin, db: Session = Depends(get_db)) -> TokenResponse:
-    user = db.scalar(select(User).where(User.email == payload.email))
-    if user is None or not verify_password(payload.password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
-
-    token = create_access_token(
-        {"sub": user.id},
-        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-    )
-    return TokenResponse(access_token=token, user=user)
-
-
 """
-Сервис аутентификации
+Сервис аутентификации.
 """
 from datetime import timedelta
-import jwt
-
+from secrets import token_urlsafe
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from ..repositories.user_repo import UserRepository
-from ..services.user_service import UserService
-from ..schemas.auth import (TokenResponse, UserAuthResponse, UserRegister,
-                            UserLogin, PasswordResetRequest, PasswordResetConfirm)
-from ..models import UserStatus
-from ..core import settings
-from ..core.security import get_password_hash, verify_password, create_access_token, verify_token
+from app.repositories.user_repo import UserRepository
+from app.services.user_service import UserService
+from app.schemas.auth import (
+    TokenRefreshResponse,
+    TokenResponse,
+    UserAuthResponse,
+    UserRegister,
+    UserLogin,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+)
+from app.schemas.common import UserStatus
+from app.core.security import (
+    get_password_hash,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    verify_token,
+)
+from app.core.config import settings
+from app.core.exceptions import InvalidCredentialsException
 
 
 class AuthService:
@@ -84,18 +63,21 @@ class AuthService:
         password_hash = get_password_hash(user_reg.password)
         user = self.user_repo.create(
             self.db,
-            email=user_reg.email,
-            password_hash=password_hash,
-            timezone=user_reg.timezone,
-            status=UserStatus.ACTIVE
+            obj_in=dict(
+                email=user_reg.email,
+                password_hash=password_hash,
+                timezone=user_reg.timezone,
+                status=UserStatus.ACTIVE
+            )
         )
 
         # Создание настроек по умолчанию
         self.user_service.create_default_settings(user.id)
 
         # Генерация токенов
-        access_token = create_access_token(data={"sub": str(user.id)}, expires_delta=timedelta(hours=1))
-        refresh_token = create_access_token(data={"sub": str(user.id)}, expires_delta=timedelta(hours=720))
+        access_token = create_access_token(data={"sub": str(user.id)})
+        refresh_token = create_refresh_token(str(user.id))
+        self.db.commit()
 
         return TokenResponse(
             access_token=access_token,
@@ -122,13 +104,13 @@ class AuthService:
         user = self.user_repo.get_by_email(self.db, user_login.email)
 
         if not user or not verify_password(user_login.password, user.password_hash):
-            raise ValueError("Invalid email or password")
+            raise InvalidCredentialsException()
 
         if user.status != UserStatus.ACTIVE:
             raise ValueError("Account is not active")
 
-        access_token = create_access_token(data={"sub": str(user.id)}, expires_delta=timedelta(hours=1))
-        refresh_token = create_access_token(data={"sub": str(user.id)}, expires_delta=timedelta(hours=720))
+        access_token = create_access_token(data={"sub": str(user.id)})
+        refresh_token = create_refresh_token(str(user.id))
 
         return TokenResponse(
             access_token=access_token,
@@ -142,19 +124,73 @@ class AuthService:
             )
         )
 
-    def request_password_reset(self, pass_reset_req: PasswordResetRequest) -> bool:
+    def refresh_token(self, refresh_token: str) -> TokenRefreshResponse:
         """
-        Запрос на сброс пароля
+        Обновление access/refresh токенов по refresh токену.
+
+        Args:
+            refresh_token: JWT refresh token.
+
+        Returns:
+            TokenRefreshResponse: Обновленная пара токенов.
+        """
+        payload = verify_token(refresh_token)
+        if payload is None:
+            raise ValueError("Invalid or expired refresh token")
+
+        if payload.get("type") != "refresh":
+            raise ValueError("Invalid token type")
+
+        user_id = payload.get("sub")
+        if not user_id:
+            raise ValueError("Invalid refresh token payload")
+
+        try:
+            user_uuid = UUID(str(user_id))
+        except ValueError as exc:
+            raise ValueError("Invalid refresh token payload") from exc
+
+        user = self.user_repo.get(self.db, user_uuid)
+        if user is None:
+            raise ValueError("User not found")
+        if user.status != UserStatus.ACTIVE:
+            raise ValueError("Account is not active")
+
+        access_token = create_access_token(data={"sub": str(user_id)})
+        new_refresh_token = create_refresh_token(str(user_id))
+        expires_in = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+
+        return TokenRefreshResponse(
+            access_token=access_token,
+            refresh_token=new_refresh_token,
+            token_type="bearer",
+            expires_in=expires_in,
+        )
+
+    def request_password_reset(self, pass_reset_req: PasswordResetRequest) -> str:
+        """
+        Запрос на сброс пароля.
 
         Args:
             pass_reset_req: Password reset request.
 
         Returns:
-            bool: результат операции
-
-        NOTE: Метод пока не реализован
+            str: Временный reset token.
         """
-        raise NotImplementedError("request_password_reset method not implemented yet")
+        user = self.user_repo.get_by_email(self.db, pass_reset_req.email)
+        if user is None:
+            # Не раскрываем существование email.
+            return ""
+
+        reset_token = create_access_token(
+            data={
+                "sub": str(user.id),
+                "type": "password_reset",
+                "nonce": token_urlsafe(8),
+            },
+            expires_delta=timedelta(minutes=30),
+        )
+        return reset_token
 
     def reset_password(self, pass_reset_req: PasswordResetConfirm) -> str:
         """
@@ -166,6 +202,30 @@ class AuthService:
         Returns:
             bool: результат операции
 
-        NOTE: Метод пока не реализован
         """
-        raise NotImplementedError("reset_password method not implemented yet")
+        payload = verify_token(pass_reset_req.token)
+        if payload is None:
+            raise ValueError("Invalid or expired reset token")
+
+        if payload.get("type") != "password_reset":
+            raise ValueError("Invalid token type")
+
+        user_id = payload.get("sub")
+        if not user_id:
+            raise ValueError("Invalid reset token payload")
+
+        try:
+            user_uuid = UUID(str(user_id))
+        except ValueError as exc:
+            raise ValueError("Invalid reset token payload") from exc
+
+        user = self.user_repo.get(self.db, user_uuid)
+        if user is None:
+            raise ValueError("User not found")
+        if user.status != UserStatus.ACTIVE:
+            raise ValueError("Account is not active")
+
+        user.password_hash = get_password_hash(pass_reset_req.new_password)
+        self.db.flush()
+        self.db.commit()
+        return "Password reset successfully"

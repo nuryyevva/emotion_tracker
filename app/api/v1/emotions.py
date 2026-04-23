@@ -11,7 +11,7 @@ from app.core.database import get_db
 from app.models import EmotionRecord
 from app.schemas.emotion import EmotionRecordCreate, EmotionRecordList, EmotionRecordResponse
 
-router = APIRouter()
+router = APIRouter(prefix='/emotions')
 
 
 @router.post("/", response_model=EmotionRecordResponse, status_code=status.HTTP_201_CREATED)

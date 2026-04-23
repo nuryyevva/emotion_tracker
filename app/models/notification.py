@@ -7,12 +7,8 @@ from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, String, Text,
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-try:
-    from app.core.database import Base
-except ModuleNotFoundError:
-    from core.database import Base
-
-from .enums import DeliveryStatus, enum_values
+from app.core.database import Base
+from app.schemas.common import DeliveryStatus, enum_values
 
 
 class Recommendation(Base):

@@ -8,10 +8,7 @@ from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Numeric, Tex
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-try:
-    from app.core.database import Base
-except ModuleNotFoundError:
-    from core.database import Base
+from app.core.database import Base
 
 
 class EmotionRecord(Base):
