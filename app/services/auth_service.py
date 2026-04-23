@@ -41,7 +41,7 @@ class AuthService:
             db: Сессия базы данных
         """
         self.db = db
-        self.user_repo = UserRepository()
+        self.user_repo = UserRepository(db)
         self.user_service = UserService(db)
 
     def register(self, user_reg: UserRegister) -> TokenResponse:
@@ -55,14 +55,13 @@ class AuthService:
             TokenResponse: Объект с токенами
         """
         # Проверка существующего пользователя
-        existing_user = self.user_repo.get_by_email(self.db, user_reg.email)
+        existing_user = self.user_repo.get_by_email(user_reg.email)
         if existing_user:
             raise ValueError("Email already registered")
 
         # Создание пользователя
         password_hash = get_password_hash(user_reg.password)
         user = self.user_repo.create(
-            self.db,
             obj_in=dict(
                 email=user_reg.email,
                 password_hash=password_hash,
@@ -101,7 +100,7 @@ class AuthService:
         Returns:
             TokenResponse: Объект с токенами
         """
-        user = self.user_repo.get_by_email(self.db, user_login.email)
+        user = self.user_repo.get_by_email(user_login.email)
 
         if not user or not verify_password(user_login.password, user.password_hash):
             raise InvalidCredentialsException()
@@ -150,7 +149,7 @@ class AuthService:
         except ValueError as exc:
             raise ValueError("Invalid refresh token payload") from exc
 
-        user = self.user_repo.get(self.db, user_uuid)
+        user = self.user_repo.get(user_uuid)
         if user is None:
             raise ValueError("User not found")
         if user.status != UserStatus.ACTIVE:
@@ -177,7 +176,7 @@ class AuthService:
         Returns:
             str: Временный reset token.
         """
-        user = self.user_repo.get_by_email(self.db, pass_reset_req.email)
+        user = self.user_repo.get_by_email(pass_reset_req.email)
         if user is None:
             # Не раскрываем существование email.
             return ""
@@ -219,7 +218,7 @@ class AuthService:
         except ValueError as exc:
             raise ValueError("Invalid reset token payload") from exc
 
-        user = self.user_repo.get(self.db, user_uuid)
+        user = self.user_repo.get(user_uuid)
         if user is None:
             raise ValueError("User not found")
         if user.status != UserStatus.ACTIVE:

@@ -11,7 +11,8 @@ from ..repositories.notification_repo import NotificationRepository
 from ..services.recommendation_service import RecommendationService
 from ..services.user_service import UserService
 from ..schemas.notification import NotificationLogResponse, NotificationList
-from ..models import DeliveryStatus, NotificationLog
+from ..schemas.common import DeliveryStatus
+from ..models import NotificationLog
 
 
 # Заглушка для Telegram клиента
@@ -31,7 +32,7 @@ class NotificationService:
             db: Сессия базы данных
         """
         self.db = db
-        self.repo = NotificationRepository()
+        self.repo = NotificationRepository(db)
         self.rec_service = RecommendationService(db)
         self.user_service = UserService(db)
         self.telegram_client = TelegramProvider()
@@ -68,7 +69,6 @@ class NotificationService:
 
         # Создание лога уведомления
         notification = self.repo.create_log(
-            self.db,
             user_id=user_id,
             recommendation_id=recommendation.get("id"),
             channel=settings.notify_channel.value if hasattr(settings.notify_channel, 'value') else str(
@@ -89,7 +89,7 @@ class NotificationService:
             pass
 
         # Отметка об успешной отправке
-        self.repo.mark_as_sent(self.db, notification=notification)
+        self.repo.mark_as_sent(notification=notification)
 
     def send_daily_reminder(self, user_id: UUID) -> None:
         """
@@ -106,7 +106,6 @@ class NotificationService:
         reminder_message = "Как вы себя чувствуете сегодня? Не забудьте отметить свои эмоции!"
 
         notification = self.repo.create_log(
-            self.db,
             user_id=user_id,
             recommendation_id=None,
             channel=settings.notify_channel.value if hasattr(settings.notify_channel, 'value') else str(
@@ -121,7 +120,7 @@ class NotificationService:
         elif settings.notify_channel.value == "email":
             pass
 
-        self.repo.mark_as_sent(self.db, notification=notification)
+        self.repo.mark_as_sent(notification=notification)
 
     def get_history(self, user_id: UUID, limit: int = 50) -> NotificationList:
         """
@@ -134,7 +133,7 @@ class NotificationService:
         Returns:
             NotificationList: Список уведомлений
         """
-        notifications = self.repo.get_by_user(self.db, user_id=user_id)
+        notifications = self.repo.get_by_user(user_id=user_id)
 
         # Ограничение по лимиту
         notifications = notifications[:limit]

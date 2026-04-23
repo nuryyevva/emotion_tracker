@@ -18,9 +18,10 @@ class DatabaseGui:
         self.root.title("Emotion Tracker DB GUI")
         self.root.geometry("1200x700")
 
-        self.user_repo = UserRepository()
-        self.hobby_repo = UserHobbyRepository()
-        self.emotion_repo = EmotionRecordRepository()
+        self.db = SessionLocal()
+        self.user_repo = UserRepository(self.db)
+        self.hobby_repo = UserHobbyRepository(self.db)
+        self.emotion_repo = EmotionRecordRepository(self.db)
 
         self.selected_user_id = None
         self.selected_user_label = StringVar(value="User not selected")
@@ -139,14 +140,10 @@ class DatabaseGui:
         entry.pack(fill=X, pady=(0, 6))
         return entry
 
-    def _session(self) -> Session:
-        return SessionLocal()
-
     def refresh_users(self) -> None:
         self.users_listbox.delete(0, END)
-        with self._session() as session:
-            users = self.user_repo.list(session)
-            self._users_cache = users
+        users = self.user_repo.list()
+        self._users_cache = users
 
         for user in users:
             self.users_listbox.insert(END, f"{user.email} | {user.timezone} | {user.status.value}")
@@ -172,20 +169,20 @@ class DatabaseGui:
             messagebox.showerror("Validation error", "Email, password hash and timezone are required.")
             return
 
-        with self._session() as session:
-            try:
-                self.user_repo.create(
-                    session,
-                    email=email,
-                    password_hash=password_hash,
-                    timezone=timezone,
-                    status=UserStatus(status),
-                )
-                session.commit()
-            except Exception as exc:
-                session.rollback()
-                messagebox.showerror("Create user failed", str(exc))
-                return
+        try:
+            self.user_repo.create(
+                obj_in={
+                    "email": email,
+                    "password_hash": password_hash,
+                    "timezone": timezone,
+                    "status": UserStatus(status),
+                }
+            )
+            self.db.commit()
+        except Exception as exc:
+            self.db.rollback()
+            messagebox.showerror("Create user failed", str(exc))
+            return
 
         self.email_entry.delete(0, END)
         self.password_hash_entry.delete(0, END)
@@ -205,14 +202,13 @@ class DatabaseGui:
             messagebox.showerror("Validation error", "Hobby is required.")
             return
 
-        with self._session() as session:
-            try:
-                self.hobby_repo.add(session, user_id=self.selected_user_id, hobby=hobby)
-                session.commit()
-            except Exception as exc:
-                session.rollback()
-                messagebox.showerror("Add hobby failed", str(exc))
-                return
+        try:
+            self.hobby_repo.add(user_id=self.selected_user_id, hobby=hobby)
+            self.db.commit()
+        except Exception as exc:
+            self.db.rollback()
+            messagebox.showerror("Add hobby failed", str(exc))
+            return
 
         self.hobby_entry.delete(0, END)
         self.refresh_hobbies()
@@ -236,23 +232,21 @@ class DatabaseGui:
 
         note = self.note_text.get("1.0", END).strip() or None
 
-        with self._session() as session:
-            try:
-                self.emotion_repo.create(
-                    session,
-                    user_id=self.selected_user_id,
-                    record_date=record_date,
-                    mood=mood,
-                    anxiety=anxiety,
-                    fatigue=fatigue,
-                    sleep_hours=sleep_hours,
-                    note=note,
-                )
-                session.commit()
-            except Exception as exc:
-                session.rollback()
-                messagebox.showerror("Add emotion record failed", str(exc))
-                return
+        try:
+            self.emotion_repo.create(
+                user_id=self.selected_user_id,
+                record_date=record_date,
+                mood=mood,
+                anxiety=anxiety,
+                fatigue=fatigue,
+                sleep_hours=sleep_hours,
+                note=note,
+            )
+            self.db.commit()
+        except Exception as exc:
+            self.db.rollback()
+            messagebox.showerror("Add emotion record failed", str(exc))
+            return
 
         self.note_text.delete("1.0", END)
         self.refresh_records()
@@ -263,8 +257,7 @@ class DatabaseGui:
         if self.selected_user_id is None:
             return
 
-        with self._session() as session:
-            hobbies = self.hobby_repo.list_by_user(session, self.selected_user_id)
+        hobbies = self.hobby_repo.list_by_user(self.selected_user_id)
 
         for hobby in hobbies:
             self.hobbies_listbox.insert(END, f"{hobby.hobby} | {hobby.created_at}")
@@ -274,8 +267,7 @@ class DatabaseGui:
         if self.selected_user_id is None:
             return
 
-        with self._session() as session:
-            records = self.emotion_repo.list_by_user(session, self.selected_user_id)
+        records = self.emotion_repo.list_by_user(self.selected_user_id)
 
         for record in records:
             self.records_listbox.insert(

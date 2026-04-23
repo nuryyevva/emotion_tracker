@@ -22,8 +22,8 @@ class RecommendationService:
             db: Сессия базы данных
         """
         self.db = db
-        self.repo = RecommendationRepository()
-        self.notif_service = NotificationRepository()
+        self.repo = RecommendationRepository(db)
+        self.notif_service = NotificationRepository(db)
 
     def _to_dict(self, recommendation) -> Dict[str, Any]:
         """Конвертирует ORM модель в словарь"""
@@ -66,7 +66,6 @@ class RecommendationService:
         """
         # Получение недавних уведомлений этого типа
         recent = self.notif_service.get_recent_by_trigger(
-            self.db,
             user_id=user_id,
             trigger_type=trigger_type,
             days=7
@@ -75,7 +74,6 @@ class RecommendationService:
 
         # Получение случайной активной рекомендации
         recommendation = self.repo.get_random_active(
-            self.db,
             trigger_type=trigger_type,
             exclude_ids=exclude_ids if exclude_ids else None
         )
@@ -100,7 +98,6 @@ class RecommendationService:
         """
         if trigger_type:
             recommendations = self.repo.get_by_trigger_type(
-                self.db,
                 trigger_type=trigger_type,
                 is_active=True
             )
@@ -109,6 +106,6 @@ class RecommendationService:
             all_triggers = ["fatigue_high", "anxiety_high", "mood_low", "mood_improvement", "sleep_deviation"]
             recommendations = []
             for t in all_triggers:
-                recommendations.extend(self.repo.get_by_trigger_type(self.db, trigger_type=t, is_active=True))
+                recommendations.extend(self.repo.get_by_trigger_type(trigger_type=t, is_active=True))
 
         return [self._to_dict(r) for r in recommendations]
