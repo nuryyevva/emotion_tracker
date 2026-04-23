@@ -1,23 +1,20 @@
 """
 Сервис пользователей
 """
-from datetime import time
 from uuid import UUID
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from sqlalchemy.orm import Session
 
-from ..repositories.user_repo import UserRepository
-from ..repositories.user_settings_repo import UserSettingsRepository
-from ..repositories.hobby_repo import UserHobbyRepository
-from ..repositories.coping_method_repo import UserCopingMethodRepository
-from ..schemas.user import (
+from app.schemas.common import UserStatus
+from app.repositories import UserRepository, UserHobbyRepository, UserSettingsRepository, UserCopingMethodRepository
+from app.schemas.user import (
     UserResponse,
     UserSettingsResponse,
     HobbyResponse,
     CopingMethodResponse,
 )
-from ..models import NotifyChannel, NotifyFrequency
+from app.core.exceptions import ResourceNotFoundException
 
 
 class UserService:
@@ -46,9 +43,9 @@ class UserService:
         Returns:
             UserResponse: Объект с данными профиля
         """
-        user = self.user_repo.get_by_id(self.db, user_id)
+        user = self.user_repo.get_by_id(self.db, user_id=user_id)
         if not user:
-            raise ValueError("User not found")
+            raise ResourceNotFoundException("User")
 
         return UserResponse(
             id=user.id,
@@ -58,6 +55,40 @@ class UserService:
             created_at=user.created_at,
             updated_at=user.updated_at
         )
+
+    def update_profile(self, user_id: UUID, update: Dict[str, Any]) -> UserResponse:
+        """
+        Обновление профиля пользователя.
+
+        Args:
+            user_id: ID пользователя
+            update: Поля для обновления профиля
+
+        Returns:
+            UserResponse: Обновленный профиль пользователя
+        """
+        user = self.user_repo.get_by_id(self.db, user_id=user_id)
+        if not user:
+            raise ResourceNotFoundException("User")
+
+        timezone = update.get("timezone")
+        if timezone is not None:
+            self.user_repo.update_timezone(self.db, user=user, timezone=timezone)
+
+        return self.get_profile(user_id)
+
+    def soft_delete_profile(self, user_id: UUID) -> None:
+        """
+        Мягкое удаление пользователя (смена статуса).
+
+        Args:
+            user_id: ID пользователя
+        """
+        user = self.user_repo.get_by_id(self.db, user_id=user_id)
+        if not user:
+            raise ResourceNotFoundException("User")
+
+        self.user_repo.update_status(self.db, user=user, status=UserStatus.DELETED)
 
     def create_default_settings(self, user_id: UUID) -> None:
         """
@@ -78,12 +109,12 @@ class UserService:
         Returns:
             UserSettingsResponse: Объект с настройками
         """
-        settings = self.settings_repo.get_by_user(self.db, user_id)
+        settings = self.settings_repo.get_by_user(self.db, user_id=user_id)
         if not settings:
             settings = self.settings_repo.create_default(self.db, user_id=user_id)
 
-        hobbies = self.hobby_repo.list_by_user(self.db, user_id)
-        coping_methods = self.coping_repo.list_by_user(self.db, user_id)
+        hobbies = self.hobby_repo.list_by_user(self.db, user_id=user_id)
+        coping_methods = self.coping_repo.list_by_user(self.db, user_id=user_id)
 
         return UserSettingsResponse(
             user_id=user_id,
@@ -97,7 +128,7 @@ class UserService:
             notify_frequency=settings.notify_frequency.value if hasattr(settings.notify_frequency, 'value') else str(
                 settings.notify_frequency),
             reminders_enabled=settings.reminders_enabled,
-            updated_at=settings.updated_at or settings.created_at,
+            updated_at=settings.updated_at,
             hobbies=[h.hobby for h in hobbies],
             coping_methods=[c.method for c in coping_methods]
         )
@@ -117,30 +148,19 @@ class UserService:
         if not settings:
             settings = self.settings_repo.create_default(self.db, user_id=user_id)
 
-        # Обновление полей
-        update_data = {}
-
-        if "weekday_wake_up" in update:
-            update_data["weekday_wake_up"] = update["weekday_wake_up"]
-        if "weekday_bedtime" in update:
-            update_data["weekday_bedtime"] = update["weekday_bedtime"]
-        if "weekend_wake_up" in update:
-            update_data["weekend_wake_up"] = update["weekend_wake_up"]
-        if "weekend_bedtime" in update:
-            update_data["weekend_bedtime"] = update["weekend_bedtime"]
-        if "notify_channel" in update:
-            update_data["notify_channel"] = update["notify_channel"]
-        if "notify_window_start" in update:
-            update_data["notify_window_start"] = update["notify_window_start"]
-        if "notify_window_end" in update:
-            update_data["notify_window_end"] = update["notify_window_end"]
-        if "notify_frequency" in update:
-            update_data["notify_frequency"] = update["notify_frequency"]
-        if "reminders_enabled" in update:
-            update_data["reminders_enabled"] = update["reminders_enabled"]
-
-        if update_data:
-            self.settings_repo.update(self.db, settings=settings, **update_data)
+        self.settings_repo.update(
+            self.db,
+            settings=settings,
+            weekday_wake_up=update.get("weekday_wake_up"),
+            weekday_bedtime=update.get("weekday_bedtime"),
+            weekend_wake_up=update.get("weekend_wake_up"),
+            weekend_bedtime=update.get("weekend_bedtime"),
+            channel=update.get("notify_channel"),
+            window_start=update.get("notify_window_start"),
+            window_end=update.get("notify_window_end"),
+            frequency=update.get("notify_frequency"),
+            enabled=update.get("reminders_enabled"),
+        )
 
         return self.get_settings(user_id)
 
@@ -155,14 +175,17 @@ class UserService:
         Returns:
             HobbyResponse: Объект с данными хобби
         """
-        user_hobby = self.hobby_repo.add(self.db, user_id=user_id, hobby=hobby)
+        existing = self.hobby_repo.get_by_user_and_name(self.db, user_id=user_id, hobby=hobby)
+        if existing:
+            return HobbyResponse(
+                id=existing.id,
+                user_id=existing.user_id,
+                hobby=existing.hobby,
+                created_at=existing.created_at,
+            )
 
-        return HobbyResponse(
-            id=user_hobby.id,
-            user_id=user_id,
-            hobby=user_hobby.hobby,
-            created_at=user_hobby.created_at
-        )
+        obj = self.hobby_repo.create(self.db, obj_in={"user_id": user_id, "hobby": hobby})
+        return HobbyResponse(id=obj.id, user_id=obj.user_id, hobby=obj.hobby, created_at=obj.created_at)
 
     def remove_hobby(self, user_id: UUID, hobby: str) -> bool:
         """
@@ -175,7 +198,7 @@ class UserService:
         Returns:
             bool: True если удалено успешно
         """
-        return self.hobby_repo.remove(self.db, user_id=user_id, hobby=hobby)
+        return self.hobby_repo.delete_by_user_and_name(self.db, user_id=user_id, hobby=hobby)
 
     def add_coping_method(self, user_id: UUID, method: str) -> CopingMethodResponse:
         """
@@ -188,14 +211,17 @@ class UserService:
         Returns:
             CopingMethodResponse: Объект с данными метода
         """
-        coping_method = self.coping_repo.add(self.db, user_id=user_id, method=method)
+        existing = self.coping_repo.get_by_user_and_name(self.db, user_id=user_id, method=method)
+        if existing:
+            return CopingMethodResponse(
+                id=existing.id,
+                user_id=existing.user_id,
+                method=existing.method,
+                created_at=existing.created_at,
+            )
 
-        return CopingMethodResponse(
-            id=coping_method.id,
-            user_id=user_id,
-            method=coping_method.method,
-            created_at=coping_method.created_at
-        )
+        obj = self.coping_repo.create(self.db, obj_in={"user_id": user_id, "method": method})
+        return CopingMethodResponse(id=obj.id, user_id=obj.user_id, method=obj.method, created_at=obj.created_at)
 
     def remove_coping_method(self, user_id: UUID, method: str) -> bool:
         """
@@ -208,4 +234,4 @@ class UserService:
         Returns:
             bool: True если удалено успешно
         """
-        return self.coping_repo.remove(self.db, user_id=user_id, method=method)
+        return self.coping_repo.delete_by_user_and_name(self.db, user_id=user_id, method=method)

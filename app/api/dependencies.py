@@ -45,7 +45,7 @@ from app.core.constants import (
 )
 from app.repositories.user_repo import UserRepository
 from app.repositories.subscription_repo import SubscriptionRepository
-from app.services.subscription_service import SubscriptionService
+# from app.services.subscription_service import SubscriptionService
 
 
 # =============================================================================
@@ -705,30 +705,30 @@ def get_settings() -> Settings:
     return get_settings()
 
 
-def get_email_client():
-    """
-    Provides configured email client instance.
-
-    Returns:
-        EmailProvider: Configured email client
-
-    Usage:
-        @router.post("/auth/password/reset")
-        def reset_password(
-            email_client = Depends(get_email_client),
-            ...
-        ):
-            email_client.send_password_reset_email(...)
-    """
-    from app.core.clients.email_client import EmailProvider
-    settings = get_settings()
-    return EmailProvider(
-        smtp_host=settings.SMTP_HOST,
-        smtp_port=settings.SMTP_PORT,
-        smtp_user=settings.SMTP_USER,
-        smtp_password=settings.SMTP_PASSWORD,
-        email_from=settings.EMAIL_FROM,
-    )
+# def get_email_client():
+#     """
+#     Provides configured email client instance.
+#
+#     Returns:
+#         EmailProvider: Configured email client
+#
+#     Usage:
+#         @router.post("/auth/password/reset")
+#         def reset_password(
+#             email_client = Depends(get_email_client),
+#             ...
+#         ):
+#             email_client.send_password_reset_email(...)
+#     """
+#     from app.core.clients.email_client import EmailProvider
+#     settings = get_settings()
+#     return EmailProvider(
+#         smtp_host=settings.SMTP_HOST,
+#         smtp_port=settings.SMTP_PORT,
+#         smtp_user=settings.SMTP_USER,
+#         smtp_password=settings.SMTP_PASSWORD,
+#         email_from=settings.EMAIL_FROM,
+#     )
 
 
 def get_telegram_client():
