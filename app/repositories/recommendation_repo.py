@@ -13,11 +13,13 @@ from app.repositories.base_repo import BaseRepository
 class RecommendationRepository(BaseRepository[Recommendation]):
     """Repository for recommendation templates shown to users."""
 
+    def __init__(self, db: Session):
+        super().__init__(db)
+
     model = Recommendation
 
     def get_by_trigger_type(
         self,
-        db: Session,
         *,
         trigger_type: str,
         is_active: bool = True,
@@ -32,25 +34,23 @@ class RecommendationRepository(BaseRepository[Recommendation]):
             )
             .order_by(Recommendation.priority.desc(), Recommendation.id.asc())
         )
-        return list(db.scalars(stmt))
+        return list(self.db.scalars(stmt))
 
     def get_random_active(
         self,
-        db: Session,
         *,
         trigger_type: str,
         exclude_ids: list[UUID] | None = None,
     ) -> Recommendation | None:
         """Return one random active recommendation, optionally excluding recent IDs."""
 
-        recommendations = self.get_by_trigger_type(db, trigger_type=trigger_type, is_active=True)
+        recommendations = self.get_by_trigger_type(trigger_type=trigger_type, is_active=True)
         if exclude_ids:
             recommendations = [recommendation for recommendation in recommendations if recommendation.id not in exclude_ids]
         return random.choice(recommendations) if recommendations else None
 
     def get_by_category(
         self,
-        db: Session,
         *,
         category: str,
         is_active: bool = True,
@@ -65,4 +65,4 @@ class RecommendationRepository(BaseRepository[Recommendation]):
             )
             .order_by(Recommendation.priority.desc(), Recommendation.id.asc())
         )
-        return list(db.scalars(stmt))
+        return list(self.db.scalars(stmt))

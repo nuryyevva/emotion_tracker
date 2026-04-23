@@ -28,10 +28,10 @@ class UserService:
             db: Сессия базы данных
         """
         self.db = db
-        self.user_repo = UserRepository()
-        self.settings_repo = UserSettingsRepository()
-        self.hobby_repo = UserHobbyRepository()
-        self.coping_repo = UserCopingMethodRepository()
+        self.user_repo = UserRepository(db)
+        self.settings_repo = UserSettingsRepository(db)
+        self.hobby_repo = UserHobbyRepository(db)
+        self.coping_repo = UserCopingMethodRepository(db)
 
     def get_profile(self, user_id: UUID) -> UserResponse:
         """
@@ -43,7 +43,7 @@ class UserService:
         Returns:
             UserResponse: Объект с данными профиля
         """
-        user = self.user_repo.get_by_id(self.db, user_id=user_id)
+        user = self.user_repo.get_by_id(user_id=user_id)
         if not user:
             raise ResourceNotFoundException("User")
 
@@ -67,13 +67,13 @@ class UserService:
         Returns:
             UserResponse: Обновленный профиль пользователя
         """
-        user = self.user_repo.get_by_id(self.db, user_id=user_id)
+        user = self.user_repo.get_by_id(user_id=user_id)
         if not user:
             raise ResourceNotFoundException("User")
 
         timezone = update.get("timezone")
         if timezone is not None:
-            self.user_repo.update_timezone(self.db, user=user, timezone=timezone)
+            self.user_repo.update_timezone(user=user, timezone=timezone)
 
         return self.get_profile(user_id)
 
@@ -84,11 +84,11 @@ class UserService:
         Args:
             user_id: ID пользователя
         """
-        user = self.user_repo.get_by_id(self.db, user_id=user_id)
+        user = self.user_repo.get_by_id(user_id=user_id)
         if not user:
             raise ResourceNotFoundException("User")
 
-        self.user_repo.update_status(self.db, user=user, status=UserStatus.DELETED)
+        self.user_repo.update_status(user=user, status=UserStatus.DELETED)
 
     def create_default_settings(self, user_id: UUID) -> None:
         """
@@ -97,7 +97,7 @@ class UserService:
         Args:
             user_id: ID пользователя
         """
-        self.settings_repo.create_default(self.db, user_id=user_id)
+        self.settings_repo.create_default(user_id=user_id)
 
     def get_settings(self, user_id: UUID) -> UserSettingsResponse:
         """
@@ -109,12 +109,12 @@ class UserService:
         Returns:
             UserSettingsResponse: Объект с настройками
         """
-        settings = self.settings_repo.get_by_user(self.db, user_id=user_id)
+        settings = self.settings_repo.get_by_user(user_id=user_id)
         if not settings:
-            settings = self.settings_repo.create_default(self.db, user_id=user_id)
+            settings = self.settings_repo.create_default(user_id=user_id)
 
-        hobbies = self.hobby_repo.list_by_user(self.db, user_id=user_id)
-        coping_methods = self.coping_repo.list_by_user(self.db, user_id=user_id)
+        hobbies = self.hobby_repo.list_by_user(user_id=user_id)
+        coping_methods = self.coping_repo.list_by_user(user_id=user_id)
 
         return UserSettingsResponse(
             user_id=user_id,
@@ -144,12 +144,11 @@ class UserService:
         Returns:
             UserSettingsResponse: Обновленный объект с настройками
         """
-        settings = self.settings_repo.get_by_user(self.db, user_id)
+        settings = self.settings_repo.get_by_user(user_id)
         if not settings:
-            settings = self.settings_repo.create_default(self.db, user_id=user_id)
+            settings = self.settings_repo.create_default(user_id=user_id)
 
         self.settings_repo.update(
-            self.db,
             settings=settings,
             weekday_wake_up=update.get("weekday_wake_up"),
             weekday_bedtime=update.get("weekday_bedtime"),
@@ -175,7 +174,7 @@ class UserService:
         Returns:
             HobbyResponse: Объект с данными хобби
         """
-        existing = self.hobby_repo.get_by_user_and_name(self.db, user_id=user_id, hobby=hobby)
+        existing = self.hobby_repo.get_by_user_and_name(user_id=user_id, hobby=hobby)
         if existing:
             return HobbyResponse(
                 id=existing.id,
@@ -184,7 +183,7 @@ class UserService:
                 created_at=existing.created_at,
             )
 
-        obj = self.hobby_repo.create(self.db, obj_in={"user_id": user_id, "hobby": hobby})
+        obj = self.hobby_repo.create(obj_in={"user_id": user_id, "hobby": hobby})
         return HobbyResponse(id=obj.id, user_id=obj.user_id, hobby=obj.hobby, created_at=obj.created_at)
 
     def remove_hobby(self, user_id: UUID, hobby: str) -> bool:
@@ -198,7 +197,7 @@ class UserService:
         Returns:
             bool: True если удалено успешно
         """
-        return self.hobby_repo.delete_by_user_and_name(self.db, user_id=user_id, hobby=hobby)
+        return self.hobby_repo.delete_by_user_and_name(user_id=user_id, hobby=hobby)
 
     def add_coping_method(self, user_id: UUID, method: str) -> CopingMethodResponse:
         """
@@ -211,7 +210,7 @@ class UserService:
         Returns:
             CopingMethodResponse: Объект с данными метода
         """
-        existing = self.coping_repo.get_by_user_and_name(self.db, user_id=user_id, method=method)
+        existing = self.coping_repo.get_by_user_and_name(user_id=user_id, method=method)
         if existing:
             return CopingMethodResponse(
                 id=existing.id,
@@ -220,7 +219,7 @@ class UserService:
                 created_at=existing.created_at,
             )
 
-        obj = self.coping_repo.create(self.db, obj_in={"user_id": user_id, "method": method})
+        obj = self.coping_repo.create(obj_in={"user_id": user_id, "method": method})
         return CopingMethodResponse(id=obj.id, user_id=obj.user_id, method=obj.method, created_at=obj.created_at)
 
     def remove_coping_method(self, user_id: UUID, method: str) -> bool:
@@ -234,4 +233,4 @@ class UserService:
         Returns:
             bool: True если удалено успешно
         """
-        return self.coping_repo.delete_by_user_and_name(self.db, user_id=user_id, method=method)
+        return self.coping_repo.delete_by_user_and_name(user_id=user_id, method=method)

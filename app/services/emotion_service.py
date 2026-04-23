@@ -30,18 +30,16 @@ class EmotionService:
             db: Сессия базы данных
         """
         self.db = db
-        self.repo = EmotionRepository()
+        self.repo = EmotionRepository(db)
         self.notif_service = NotificationService(db)
 
     def _calculate_mini_stats(self, user_id: UUID) -> Optional[MiniStats]:
         """Рассчитывает мини-статистику за последние 7 дней"""
         end_date = date.today()
-        start_date = end_date - timedelta(days=6)
 
         records = self.repo.list_by_user_and_period(
-            self.db,
             user_id=user_id,
-            start_date=start_date,
+            start_date=end_date - timedelta(days=6),
             end_date=end_date
         )
 
@@ -88,7 +86,7 @@ class EmotionService:
         record_date = data.get("record_date", date.today())
 
         # Проверка на существующую запись за этот день
-        existing = self.repo.get_by_user_and_date(self.db, user_id, record_date)
+        existing = self.repo.get_by_user_and_date(user_id, record_date)
         if existing:
             raise ValueError("Record already exists for this date")
 
@@ -97,7 +95,6 @@ class EmotionService:
             sleep_hours = Decimal(str(sleep_hours))
 
         record = self.repo.create(
-            self.db,
             user_id=user_id,
             record_date=record_date,
             mood=data["mood"],
@@ -124,7 +121,7 @@ class EmotionService:
         Returns:
             TodayRecordResponse: Объект с записью за сегодня
         """
-        record = self.repo.get_by_user_and_date(self.db, user_id, date.today())
+        record = self.repo.get_by_user_and_date(user_id, date.today())
 
         if record:
             return TodayRecordResponse(
@@ -152,7 +149,6 @@ class EmotionService:
             list[EmotionRecordResponse]: Список записей эмоций
         """
         records = self.repo.list_by_user_and_period(
-            self.db,
             user_id=user_id,
             start_date=start_date,
             end_date=end_date
@@ -177,7 +173,7 @@ class EmotionService:
         Returns:
             EmotionRecordResponse: Обновленная запись
         """
-        record = self.repo.get(self.db, record_id)
+        record = self.repo.get(record_id)
 
         if not record or record.user_id != user_id:
             raise ValueError("Record not found")
@@ -195,7 +191,7 @@ class EmotionService:
             update_data["note"] = data["note"]
 
         if update_data:
-            record = self.repo.update(self.db, db_obj=record, obj_in=update_data)
+            record = self.repo.update(db_obj=record, obj_in=update_data)
 
         return self._to_response(record)
 
@@ -210,12 +206,12 @@ class EmotionService:
         Returns:
             bool: True если удалено успешно
         """
-        record = self.repo.get(self.db, record_id)
+        record = self.repo.get(record_id)
 
         if not record or record.user_id != user_id:
             return False
 
-        deleted = self.repo.remove(self.db, id=record_id)
+        deleted = self.repo.remove(id=record_id)
         return deleted is not None
 
 
