@@ -4,7 +4,7 @@ from uuid import UUID
 
 from app.core.database import SessionLocal
 from app.services.notification_service import NotificationService
-from app.core.bot import TelegramBotService
+from app.services.bot.bot_service import TelegramBotService
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ def start_telegram_bot() -> bool:
             bot_service = TelegramBotService(
                 db=db,
                 bot_token=settings.TELEGRAM_BOT_TOKEN.get_secret_value(),
-                web_app_url=f"{settings.FRONTEND_URL}/survey",
+                frontend_url=settings.FRONTEND_URL,
             )
             bot_service.start()
             logger.info("Telegram bot started successfully")

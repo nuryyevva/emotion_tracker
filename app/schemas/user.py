@@ -122,6 +122,7 @@ class UserResponse(UUIDMixin, BaseSchema):
     status: str
     created_at: datetime
     updated_at: datetime
+    telegram_chat_id: Optional[str] = None
 
 
 class UserSettingsResponse(BaseSchema):

@@ -16,7 +16,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.core.bot.handlers import MessageHandlers
+from app.services.bot.handlers import MessageHandlers
 from app.repositories.user_settings_repo import UserSettingsRepository
 from app.repositories.user_repo import UserRepository
 from app.schemas.common import NotificationChannel
@@ -38,7 +38,7 @@ class TelegramBotService:
         self,
         db: Session,
         bot_token: str,
-        web_app_url: str = "https://emotions-tracker.com/survey",
+        frontend_url: str = "http://localhost:3000",
     ):
         """
         Initialize the Telegram bot service.
@@ -46,11 +46,11 @@ class TelegramBotService:
         Args:
             db: Database session for persistent storage
             bot_token: Telegram bot token
-            web_app_url: URL for the survey web app
+            frontend_url: Base URL for the frontend web app (for survey links)
         """
         self.db = db
         self.bot_token = bot_token
-        self.web_app_url = web_app_url
+        self.frontend_url = frontend_url.rstrip('/')
         self.handlers = MessageHandlers()
         self.settings_repo = UserSettingsRepository(db)
         self.user_repo = UserRepository(db)
@@ -124,7 +124,6 @@ class TelegramBotService:
         Returns:
             User object or None if not found
         """
-        # Query users table for telegram_chat_id
         from sqlalchemy import select
         from app.models import User
         
@@ -227,7 +226,7 @@ class TelegramBotService:
         Returns:
             bool: True if reminder was sent successfully
         """
-        survey_url = f"{self.web_app_url}?tg_chat_id={chat_id}"
+        survey_url = f"{self.frontend_url}/survey?tg_chat_id={chat_id}"
         message = self.handlers.reminder_message(survey_url)
         return self._send_message(chat_id, message)
 
