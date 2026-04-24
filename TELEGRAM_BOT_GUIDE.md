@@ -23,39 +23,39 @@
                         ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      SERVICE LAYER                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ UserService  │  │Notification  │  │ BotService   │         │
-│  │              │  │  Service     │  │ (Telegram)   │         │
-│  └──────────────┘  └──────────────┘  └──────────────┘         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │ UserService  │  │Notification  │  │ BotService   │           │
+│  │              │  │  Service     │  │ (Telegram)   │           │
+│  └──────────────┘  └──────────────┘  └──────────────┘           │
 └───────────────────────┬─────────────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                   REPOSITORY LAYER                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ UserRepo     │  │Notification  │  │UserSettings  │         │
-│  │              │  │  Repo        │  │  Repo        │         │
-│  └──────────────┘  └──────────────┘  └──────────────┘         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │ UserRepo     │  │Notification  │  │UserSettings  │           │
+│  │              │  │  Repo        │  │  Repo        │           │
+│  └──────────────┘  └──────────────┘  └──────────────┘           │
 └───────────────────────┬─────────────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    DATABASE (PostgreSQL)                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ users        │  │notification_ │  │user_settings │         │
-│  │ (with        │  │  logs        │  │              │         │
-│  │ telegram_    │  │              │  │              │         │
-│  │ chat_id)     │  │              │  │              │         │
-│  └──────────────┘  └──────────────┘  └──────────────┘         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │ users        │  │notification_ │  │user_settings │           │
+│  │ (with        │  │  logs        │  │              │           │
+│  │ telegram_    │  │              │  │              │           │
+│  │ chat_id)     │  │              │  │              │           │
+│  └──────────────┘  └──────────────┘  └──────────────┘           │
 └─────────────────────────────────────────────────────────────────┘
                         ▲
                         │
 ┌───────────────────────┴─────────────────────────────────────────┐
 │                    TELEGRAM BOT                                 │
-│  (Background thread in TelegramBotService)                     │
-│  - Polls for messages every 1 second                           │
-│  - Sends daily reminders at configured times                   │
-│  - Handles commands: /start, /help, /settings, /stop          │
+│  (Background thread in TelegramBotService)                      │
+│  - Polls for messages every 1 second                            │
+│  - Sends daily reminders at configured times                    │
+│  - Handles commands: /start, /help, /settings, /stop            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

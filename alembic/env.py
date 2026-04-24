@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -17,7 +18,8 @@ if config.config_file_name is not None:
 if settings.DATABASE_URL.startswith("postgresql+psycopg"):
     configure_postgres_client()
 
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+database_url = os.getenv("ALEMBIC_DATABASE_URL", "postgresql+psycopg://emotion_user:emotion_password@localhost:5432/emotion_tracker")
+config.set_main_option("sqlalchemy.url", database_url)
 
 target_metadata = Base.metadata
 
