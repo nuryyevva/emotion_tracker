@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from uuid import UUID
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_db, require_admin
 from app.services.admin_service import AdminService
 from app.schemas.admin import (
     # User schemas
@@ -50,6 +50,7 @@ async def get_all_users(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of records to return"),
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get all users with pagination."""
     users = service.list_all_users(skip=skip, limit=limit)
@@ -61,6 +62,7 @@ async def get_all_users(
 async def get_user(
     user_id: UUID,
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get a single user by ID."""
     user = service.get_user_by_id(user_id)
@@ -73,6 +75,7 @@ async def get_user(
 async def delete_user(
     user_id: UUID,
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Delete a user by ID."""
     deleted = service.delete_user(user_id)
@@ -89,6 +92,7 @@ async def get_all_user_settings(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of records to return"),
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get all user settings with pagination."""
     settings = service.list_all_user_settings(skip=skip, limit=limit)
@@ -105,6 +109,7 @@ async def get_all_hobbies(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of records to return"),
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get all user hobbies with pagination."""
     hobbies = service.list_all_hobbies(skip=skip, limit=limit)
@@ -121,6 +126,7 @@ async def get_all_coping_methods(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of records to return"),
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get all user coping methods with pagination."""
     methods = service.list_all_coping_methods(skip=skip, limit=limit)
@@ -137,6 +143,7 @@ async def get_all_emotions(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of records to return"),
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get all emotion records with pagination."""
     emotions = service.list_all_emotions(skip=skip, limit=limit)
@@ -153,6 +160,7 @@ async def get_all_notifications(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of records to return"),
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get all notification logs with pagination."""
     notifications = service.list_all_notifications(skip=skip, limit=limit)
@@ -168,6 +176,7 @@ async def get_all_notifications(
 async def create_recommendation(
     request: AdminRecommendationCreate,
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Create a new recommendation."""
     data = request.model_dump()
@@ -181,6 +190,7 @@ async def get_recommendations(
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of records to return"),
     is_active: Optional[bool] = Query(default=None, description="Filter by active status"),
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get all recommendations with pagination and optional filter."""
     recommendations = service.list_all_recommendations(skip=skip, limit=limit, is_active=is_active)
@@ -192,6 +202,7 @@ async def get_recommendations(
 async def get_recommendation(
     rec_id: UUID,
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get a single recommendation by ID."""
     recommendation = service.get_recommendation_by_id(rec_id)
@@ -204,6 +215,7 @@ async def get_recommendation(
 async def delete_recommendation(
     rec_id: UUID,
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Delete a recommendation by ID."""
     deleted = service.delete_recommendation(rec_id)
@@ -220,6 +232,7 @@ async def get_all_subscriptions(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of records to return"),
     service: AdminService = Depends(get_admin_service),
+    _ = Depends(require_admin),
 ):
     """Get all subscriptions with pagination."""
     subscriptions = service.list_all_subscriptions(skip=skip, limit=limit)

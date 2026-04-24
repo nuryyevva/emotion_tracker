@@ -255,6 +255,38 @@ def get_current_user_optional(
         return None
 
 
+def require_admin(
+        user: Annotated[CurrentUserContext, Depends(get_current_user)],
+) -> bool:
+    """
+    Guard dependency to ensure user has admin privileges.
+    Required for all admin endpoints.
+
+    Args:
+        user: Current user context
+
+    Returns:
+        bool: Always True if passes (else raises exception)
+
+    Raises:
+        HTTPException 403: If user is not an admin
+
+    Usage:
+        @router.get("/admin/users")
+        def get_all_users(_ = Depends(require_admin)):
+            ...
+    """
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": "admin_required",
+                "message": "Доступ запрещен. Требуются права администратора.",
+            },
+        )
+    return True
+
+
 # =============================================================================
 # AUTHORIZATION & SUBSCRIPTION DEPENDENCIES (FREEMIUM LOGIC)
 # =============================================================================
