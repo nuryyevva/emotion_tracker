@@ -44,6 +44,7 @@ services:
       - "8090:80"
     volumes:
       - ./app/templates:/usr/share/nginx/html:ro
+      - ./static:/usr/share/nginx/static:ro
     depends_on:
       - api
 

@@ -7,12 +7,11 @@ tailwind.config = {
             },
             colors: {
                 brand: {
-                    bg: '#F9FAFB', /* Very light gray */
-                    sage: '#A7B5A7', /* Sage Green */
+                    bg: '#F9FAFB',
+                    sage: '#A7B5A7',
                     sageDark: '#7A8C7A',
-                    sand: '#EDE6DD', /* Warm neutral */
-                    sky: '#E3EDF5', /* Pastel blue */
-                    text: '#4B5563', /* Soft dark grey */
+                    sand: '#EDE6DD',
+                    sky: '#E3EDF5',
                     heading: '#1F2937',
                     muted: '#6B7280'
                 }

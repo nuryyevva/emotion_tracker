@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- Tailwind Configuration -->
     <script src="../static/js/tailwind-config.js"></script>
 
@@ -31,8 +34,8 @@
             <span class="font-semibold text-lg tracking-tight text-gray-800">Трекер эмоций</span>
         </div>
         <div class="flex items-center gap-4">
-            <a href="dashboard.html" class="text-sm font-medium text-brand-heading hover:text-brand-sageDark transition-colors">Дневник</a>
             <a href="analytics.html" class="text-sm font-medium text-gray-500 hover:text-brand-sageDark transition-colors">Аналитика</a>
+            <a href="dashboard.html" class="text-sm font-medium text-brand-heading hover:text-brand-sageDark transition-colors">Дневник</a>
             <a href="settings.html" class="text-sm font-medium text-gray-500 hover:text-brand-sageDark transition-colors">Настройки</a>
             <button onclick="logout()" class="text-sm font-medium text-gray-400 hover:text-red-400 transition-colors ml-2">Выйти</button>
         </div>
@@ -182,57 +185,6 @@
     </div>
 
     <!-- Script for UI interaction -->
-    <script>
-        function updateValue(type, value) {
-            // Update number display
-            const displayId = `value-${type}`;
-            const displayEl = document.getElementById(displayId);
-            if (displayEl) {
-                displayEl.textContent = value;
-                
-                // Optional: Add subtle animation to the number
-                displayEl.classList.add('scale-110');
-                setTimeout(() => displayEl.classList.remove('scale-110'), 100);
-            }
-
-            // Color feedback based on severity
-            let colorClass = '';
-            if (type === 'mood') {
-                if(value < 4) colorClass = 'text-red-400';
-                else if(value > 7) colorClass = 'text-green-500';
-                else colorClass = 'text-blue-400';
-            } else if (type === 'sleep') {
-                if(value < 5) colorClass = 'text-orange-400';
-                else if(value >= 7 && value <= 9) colorClass = 'text-green-500';
-                else colorClass = 'text-blue-400';
-            } else {
-                // anxiety and fatigue
-                if(value > 7) colorClass = 'text-red-400';
-                else if(value > 4) colorClass = 'text-orange-400';
-                else colorClass = 'text-green-500';
-            }
-            
-            if(displayEl) displayEl.className = `text-lg font-bold ${colorClass}`;
-        }
-
-        function saveRecord() {
-            // Mock save functionality
-            const record = {
-                mood: parseInt(document.getElementById('mood').value),
-                anxiety: parseInt(document.getElementById('anxiety').value),
-                fatigue: parseInt(document.getElementById('fatigue').value),
-                sleep_hours: parseFloat(document.getElementById('sleep').value),
-                note: document.getElementById('note').value,
-                record_date: new Date().toISOString().split('T')[0]
-            };
-
-            console.log('Saving record:', record);
-            
-            // Show success toast
-            const toast = document.getElementById('toast');
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
     <script src="../static/js/dashboard.js"></script>
-    </script>
 </body>
 </html>
