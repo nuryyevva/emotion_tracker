@@ -140,32 +140,45 @@ class TelegramBotService:
         """
         chat_id = str(message.get("chat", {}).get("id"))
         text = message.get("text", "").strip()
+        
+        # Handle deep linking - extract payload from /start command
+        # When user clicks t.me/bot?start=<user_id>, Telegram sends "/start <user_id>"
+        start_payload = None
+        if text.startswith("/start"):
+            parts = text.split(maxsplit=1)
+            if len(parts) > 1:
+                start_payload = parts[1].strip()
+                text = "/start"  # Normalize to just /start for handler
 
         if not chat_id or not text:
             return
 
         logger.info(f"Received message from {chat_id}: {text}")
 
-        # Get user by chat_id
+        # Get user by chat_id (for existing linked users)
         user = self._get_user_by_chat_id(chat_id)
         user_id = user.id if user else None
 
         # Process commands
         if text == "/start":
-            response = self.handlers.start_handler()
-            # Register/update user's Telegram chat ID
-            if user and user_id:
-                # Ensure user has notification settings
-                settings = self.settings_repo.get_by_user(user_id)
-                if not settings:
-                    self.settings_repo.create_default(user_id=user_id)
-                else:
-                    # Enable reminders when user starts the bot
-                    self.settings_repo.update(
-                        settings=settings,
-                        enabled=True,
-                        channel=NotificationChannel.TELEGRAM,
-                    )
+            # Check if this is a deep link with user_id payload
+            if start_payload:
+                response = self._handle_deep_link(start_payload, chat_id)
+            else:
+                response = self.handlers.start_handler()
+                # For regular /start without payload, just enable notifications if user exists
+                if user and user_id:
+                    # Ensure user has notification settings
+                    settings = self.settings_repo.get_by_user(user_id)
+                    if not settings:
+                        self.settings_repo.create_default(user_id=user_id)
+                    else:
+                        # Enable reminders when user starts the bot
+                        self.settings_repo.update(
+                            settings=settings,
+                            enabled=True,
+                            channel=NotificationChannel.TELEGRAM,
+                        )
 
         elif text == "/help":
             response = self.handlers.help_handler()
@@ -215,6 +228,73 @@ class TelegramBotService:
             response = self.handlers.unknown_handler()
 
         self._send_message(chat_id, response)
+
+    def _handle_deep_link(self, payload: str, chat_id: str) -> str:
+        """
+        Handle deep linking from web app to connect Telegram account.
+        
+        When user clicks "Connect Telegram" on web app, they're redirected to:
+        https://t.me/<bot_name>?start=<user_id>
+        
+        Args:
+            payload: The payload from deep link (should be user_id)
+            chat_id: Telegram chat ID
+            
+        Returns:
+            str: Response message
+        """
+        from uuid import UUID
+        
+        try:
+            # Try to parse payload as UUID
+            user_id = UUID(payload)
+        except ValueError:
+            logger.warning(f"Invalid UUID in deep link payload: {payload}")
+            return (
+                "❌ *Ошибка привязки аккаунта*\\n\\n"
+                "Неверная ссылка. Пожалуйста, перейдите в настройки вашего аккаунта на сайте "
+                "и нажмите кнопку 'Подключить Telegram' еще раз."
+            )
+        
+        # Check if user exists
+        user = self.user_repo.get_by_id(user_id)
+        if not user:
+            logger.warning(f"User not found for deep link: {user_id}")
+            return (
+                "❌ *Ошибка привязки аккаунта*\\n\\n"
+                "Пользователь не найден. Убедитесь, что вы вошли в свой аккаунт на сайте."
+            )
+        
+        # Check if this chat_id is already linked to another user
+        existing_user = self._get_user_by_chat_id(chat_id)
+        if existing_user and existing_user.id != user_id:
+            return (
+                f"⚠️ *Этот Telegram аккаунт уже привязан*\\n\\n"
+                f"Telegram аккаунт уже связан с другим пользователем ({existing_user.email}).\\n\\n"
+                "Если это ошибка, пожалуйста, свяжитесь с поддержкой."
+            )
+        
+        # Link the chat_id to the user
+        try:
+            self.register_user(user_id=user_id, chat_id=chat_id)
+            logger.info(f"Successfully linked user {user_id} ({user.email}) to chat_id {chat_id}")
+            
+            return (
+                f"✅ *Аккаунт успешно привязан!*\\n\\n"
+                f"Здравствуйте, {user.email}!\\n\\n"
+                "Теперь вы будете получать уведомления от Трекера Эмоций в Telegram.\\n\\n"
+                "📝 *Команды:*\\n"
+                "/start - Приветственное сообщение\\n"
+                "/help - Помощь\\n"
+                "/settings - Настройки уведомлений\\n"
+                "/stop - Отписаться от уведомлений"
+            )
+        except Exception as e:
+            logger.error(f"Failed to link user {user_id} to chat_id {chat_id}: {e}")
+            return (
+                "❌ *Ошибка при привязке аккаунта*\\n\\n"
+                "Произошла ошибка при привязке. Пожалуйста, попробуйте еще раз или обратитесь в поддержку."
+            )
 
     def send_reminder(self, chat_id: str) -> bool:
         """
