@@ -45,6 +45,7 @@ class User(Base):
         server_default=UserStatus.ACTIVE.value,
         nullable=False,
     )
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
 
     settings: Mapped["UserSettings"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
     emotion_records: Mapped[list["EmotionRecord"]] = relationship(back_populates="user", cascade="all, delete-orphan")

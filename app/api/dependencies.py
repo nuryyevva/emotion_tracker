@@ -60,6 +60,7 @@ class CurrentUserContext(BaseModel):
     user_id: UUID
     email: str
     timezone: str
+    is_admin: bool
     subscription_plan: str  # "free" or "pro"
     subscription_status: str  # "active", "expired", "cancelled"
     subscription_expires_at: Optional[datetime]
@@ -215,6 +216,7 @@ def get_current_user(
         user_id=user.id,
         email=user.email,
         timezone=user.timezone,
+        is_admin=user.is_admin,
         subscription_plan=subscription_plan,
         subscription_status=subscription_status,
         subscription_expires_at=subscription_expires_at,
