@@ -53,7 +53,8 @@ class UserService:
             timezone=user.timezone,
             status=user.status.value if hasattr(user.status, 'value') else str(user.status),
             created_at=user.created_at,
-            updated_at=user.updated_at
+            updated_at=user.updated_at,
+            telegram_chat_id=user.telegram_chat_id,
         )
 
     def update_profile(self, user_id: UUID, update: Dict[str, Any]) -> UserResponse:

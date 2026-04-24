@@ -55,13 +55,14 @@ class NotificationRepository(BaseRepository[NotificationLog]):
             obj_in={"delivery_status": DeliveryStatus.FAILED},
         )
 
-    def get_by_user(self, *, user_id: UUID) -> list[NotificationLog]:
+    def get_by_user(self, *, user_id: UUID, limit: int = 50) -> list[NotificationLog]:
         """Return notification history for a user ordered from newest to oldest."""
 
         stmt = (
             select(NotificationLog)
             .where(NotificationLog.user_id == user_id)
             .order_by(NotificationLog.sent_at.desc())
+            .limit(limit)
         )
         return list(self.db.scalars(stmt))
 

@@ -1,5 +1,11 @@
 from typing import Optional
 import logging
+from uuid import UUID
+
+from app.core.database import SessionLocal
+from app.services.notification_service import NotificationService
+from app.services.bot.bot_service import TelegramBotService
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +20,7 @@ def shared_task(func):
 @shared_task
 def send_daily_reminder(user_id_str: str) -> bool:
     """
-    Отправляет ежедневное напоминание пользователю
+    Отправляет ежедневное напоминание пользователю через NotificationService
 
     Args:
         user_id_str: ID пользователя в виде строки
@@ -25,9 +31,14 @@ def send_daily_reminder(user_id_str: str) -> bool:
     logger.info(f"Sending daily reminder to user {user_id_str}")
 
     try:
-        print(f"[DAILY_REMINDER] Sent to user: {user_id_str}")
-
-        return True
+        db = SessionLocal()
+        try:
+            notification_service = NotificationService(db)
+            notification_service.send_daily_reminder(UUID(user_id_str))
+            logger.info(f"Daily reminder sent successfully to user {user_id_str}")
+            return True
+        finally:
+            db.close()
     except Exception as e:
         logger.error(f"Failed to send daily reminder to {user_id_str}: {e}")
         return False
@@ -36,7 +47,7 @@ def send_daily_reminder(user_id_str: str) -> bool:
 @shared_task
 def send_trend_alert(user_id_str: str, trigger_type: str) -> bool:
     """
-    Отправляет алерт об изменении тренда
+    Отправляет алерт об изменении тренда через NotificationService
 
     Args:
         user_id_str: ID пользователя в виде строки
@@ -47,22 +58,15 @@ def send_trend_alert(user_id_str: str, trigger_type: str) -> bool:
     """
     logger.info(f"Sending trend alert to user {user_id_str}, trigger: {trigger_type}")
 
-    alert_messages = {
-        "high_intensity": "Заметили, что интенсивность эмоций высокая. Хотите поговорить?",
-        "low_intensity": "Последнее время эмоции приглушены. Как вы себя чувствуете?",
-        "rising_intensity": "Интенсивность эмоций растет. Давайте разберемся, что происходит.",
-        "falling_intensity": "Интенсивность эмоций снижается. Что изменилось в последнее время?",
-        "sleep_deprivation": "Недостаток сна может влиять на настроение. Отдохните.",
-        "low_activity": "Мало активности? Попробуйте небольшую прогулку."
-    }
-
     try:
-        message = alert_messages.get(trigger_type, "Замечены изменения в ваших эмоциональных паттернах.")
-
-        print(f"[TREND_ALERT] User: {user_id_str}, Trigger: {trigger_type}")
-        print(f"[TREND_ALERT] Message: {message}")
-
-        return True
+        db = SessionLocal()
+        try:
+            notification_service = NotificationService(db)
+            notification_service.send_trend_alert(UUID(user_id_str), trigger_type)
+            logger.info(f"Trend alert sent successfully to user {user_id_str}")
+            return True
+        finally:
+            db.close()
     except Exception as e:
         logger.error(f"Failed to send trend alert to {user_id_str}: {e}")
         return False
@@ -90,3 +94,39 @@ def send_welcome_email(user_id_str: str, email: str) -> bool:
 
     # Возвращаем True для имитации успешной отправки
     return True
+
+
+@shared_task
+def start_telegram_bot() -> bool:
+    """
+    Запускает Telegram бота для обработки сообщений и отправки напоминаний
+    
+    Returns:
+        bool: True если бот запущен успешно
+    """
+    logger.info("Starting Telegram bot...")
+    
+    try:
+        if not settings.TELEGRAM_BOT_TOKEN:
+            logger.warning("TELEGRAM_BOT_TOKEN not configured, skipping bot startup")
+            return False
+            
+        db = SessionLocal()
+        try:
+            bot_service = TelegramBotService(
+                db=db,
+                bot_token=settings.TELEGRAM_BOT_TOKEN.get_secret_value(),
+                frontend_url=settings.FRONTEND_URL,
+            )
+            bot_service.start()
+            logger.info("Telegram bot started successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to start Telegram bot: {e}")
+            db.rollback()
+            raise
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Error starting Telegram bot: {e}")
+        return False
