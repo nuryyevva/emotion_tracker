@@ -14,62 +14,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Tailwind Configuration -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            bg: '#F9FAFB', /* Very light gray */
-                            sage: '#A7B5A7', /* Sage Green */
-                            sageDark: '#7A8C7A',
-                            sand: '#EDE6DD', /* Warm neutral */
-                            sky: '#E3EDF5', /* Pastel blue */
-                            text: '#4B5563', /* Soft dark grey */
-                            heading: '#1F2937'
-                        }
-                    },
-                    borderRadius: {
-                        'xl': '1rem',
-                        '2xl': '1.5rem',
-                        '3xl': '2rem',
-                        'full': '9999px'
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="../static/js/tailwind-config.js"></script>
 
-    <style>
-        body {
-            background-color: #fcfbfa; /* Slight warm tint */
-            color: #4B5563;
-            -webkit-font-smoothing: antialiased;
-        }
-        
-        .blob-bg {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.6;
-            z-index: -1;
-            animation: float 10s infinite ease-in-out alternate;
-        }
-        
-        @keyframes float {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(20px, -20px); }
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
-    </style>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../static/css/styles.css">
 </head>
 <body class="overflow-x-hidden relative">
 
@@ -332,6 +280,7 @@
             });
         });
     </script>
+
+    <script src="../static/js/index.js"></script>
 </body>
 </html>
-
