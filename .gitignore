@@ -1,4 +1,1 @@
-```
-# Templates directory - preserve existing rules if any
-# Add specific template-related ignores if needed in future
-```
+Nothing should be ignored since the changes only include HTML template files which are source code files.
