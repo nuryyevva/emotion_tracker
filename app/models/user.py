@@ -7,13 +7,8 @@ from sqlalchemy import Boolean, CheckConstraint, DateTime, Enum, ForeignKey, Ind
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-try:
-    from app.core.database import Base
-except ModuleNotFoundError:
-    from core.database import Base
-
-from .enums import NotifyChannel, NotifyFrequency, UserStatus, enum_values
-
+from app.core.database import Base
+from app.schemas.common import NotifyFrequency, UserStatus, enum_values, NotificationChannel
 
 class User(Base):
     __tablename__ = "users"
@@ -30,6 +25,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     timezone: Mapped[str] = mapped_column(String(100), nullable=False)
+    telegram_chat_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=datetime.utcnow,
@@ -73,11 +69,11 @@ class UserSettings(Base):
     weekday_bedtime: Mapped[time] = mapped_column(nullable=False)
     weekend_wake_up: Mapped[time] = mapped_column(nullable=False)
     weekend_bedtime: Mapped[time] = mapped_column(nullable=False)
-    notify_channel: Mapped[NotifyChannel] = mapped_column(
-        Enum(NotifyChannel, name="notify_channel", values_callable=enum_values),
+    notify_channel: Mapped[NotificationChannel] = mapped_column(
+        Enum(NotificationChannel, name="notify_channel", values_callable=enum_values),
         nullable=False,
-        server_default=NotifyChannel.EMAIL.value,
-        default=NotifyChannel.EMAIL,
+        server_default=NotificationChannel.EMAIL.value,
+        default=NotificationChannel.EMAIL,
     )
     notify_window_start: Mapped[time] = mapped_column(nullable=False)
     notify_window_end: Mapped[time] = mapped_column(nullable=False)

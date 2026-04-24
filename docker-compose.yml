@@ -4,7 +4,7 @@ services:
     container_name: emotion_tracker_db
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.example
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-emotion_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-emotion_password}
@@ -26,7 +26,7 @@ services:
     container_name: emotion_tracker_api
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.example
     depends_on:
       db:
         condition: service_healthy
@@ -34,7 +34,7 @@ services:
       - "${API_PORT:-8000}:8000"
     volumes:
       - .:/app
-    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
+    command: poetry run uvicorn app.api.main:app --host 0.0.0.0 --port 8000
 
   frontend:
     build:
@@ -47,18 +47,18 @@ services:
     depends_on:
       - api
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: emotion_password
-    ports:
-      - "5050:80"
-    depends_on:
-      - db
-    networks:
-      - app-network
+#  pgadmin:
+#    image: dpage/pgadmin4:latest
+#    container_name: pgadmin
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: admin@example.com
+#      PGADMIN_DEFAULT_PASSWORD: emotion_password
+#    ports:
+#      - "5050:80"
+#    depends_on:
+#      - db
+#    networks:
+#      - app-network
 
 volumes:
   postgres_data:

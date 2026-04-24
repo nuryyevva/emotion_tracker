@@ -114,8 +114,9 @@ class TokenRefreshRequest(BaseSchema):
 # =============================================================================
 
 
-class UserAuthResponse(UUIDMixin, BaseSchema):
+class UserAuthResponse(BaseSchema):
     """User data in authentication response."""
+    user_id: str
     email: str
     created_at: datetime
 
@@ -127,6 +128,7 @@ class TokenResponse(BaseSchema):
     Used in: POST /api/v1/auth/register, POST /api/v1/auth/login
     """
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     expires_in: int = 1800  # 30 minutes in seconds
     user: Optional[UserAuthResponse] = None
@@ -148,4 +150,6 @@ class TokenRefreshResponse(BaseSchema):
     Used in: POST /api/v1/auth/refresh
     """
     access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
     expires_in: int = 1800

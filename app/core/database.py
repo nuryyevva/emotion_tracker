@@ -10,10 +10,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, declared_attr
 
-try:
-    from app.core.config import settings
-except ModuleNotFoundError:
-    from core.config import settings
+from app.core.config import settings
 
 # =============================================================================
 # ENGINE

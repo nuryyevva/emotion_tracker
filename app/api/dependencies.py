@@ -45,7 +45,6 @@ from app.core.constants import (
 )
 from app.repositories.user_repo import UserRepository
 from app.repositories.subscription_repo import SubscriptionRepository
-from app.services.subscription_service import SubscriptionService
 
 
 # =============================================================================
@@ -189,8 +188,8 @@ def get_current_user(
         )
 
     # Fetch user from database
-    user_repo = UserRepository()
-    user = user_repo.get_by_id(db, user_id)
+    user_repo = UserRepository(db)
+    user = user_repo.get_by_id(user_id)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -199,8 +198,8 @@ def get_current_user(
         )
 
     # Fetch subscription status
-    sub_repo = SubscriptionRepository()
-    subscription = sub_repo.get_by_user(db, user_id)
+    sub_repo = SubscriptionRepository(db)
+    subscription = sub_repo.get_by_user(user_id)
 
     # Build context
     if subscription:
@@ -705,30 +704,30 @@ def get_settings() -> Settings:
     return get_settings()
 
 
-def get_email_client():
-    """
-    Provides configured email client instance.
-
-    Returns:
-        EmailProvider: Configured email client
-
-    Usage:
-        @router.post("/auth/password/reset")
-        def reset_password(
-            email_client = Depends(get_email_client),
-            ...
-        ):
-            email_client.send_password_reset_email(...)
-    """
-    from app.core.clients.email_client import EmailProvider
-    settings = get_settings()
-    return EmailProvider(
-        smtp_host=settings.SMTP_HOST,
-        smtp_port=settings.SMTP_PORT,
-        smtp_user=settings.SMTP_USER,
-        smtp_password=settings.SMTP_PASSWORD,
-        email_from=settings.EMAIL_FROM,
-    )
+# def get_email_client():
+#     """
+#     Provides configured email client instance.
+#
+#     Returns:
+#         EmailProvider: Configured email client
+#
+#     Usage:
+#         @router.post("/auth/password/reset")
+#         def reset_password(
+#             email_client = Depends(get_email_client),
+#             ...
+#         ):
+#             email_client.send_password_reset_email(...)
+#     """
+#     from app.core.clients.email_client import EmailProvider
+#     settings = get_settings()
+#     return EmailProvider(
+#         smtp_host=settings.SMTP_HOST,
+#         smtp_port=settings.SMTP_PORT,
+#         smtp_user=settings.SMTP_USER,
+#         smtp_password=settings.SMTP_PASSWORD,
+#         email_from=settings.EMAIL_FROM,
+#     )
 
 
 def get_telegram_client():

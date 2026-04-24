@@ -14,46 +14,21 @@ from app.repositories.base_repo import BaseRepository
 class EmotionRepository(BaseRepository[EmotionRecord]):
     """Repository for daily emotion check-ins and emotion-based analytics."""
 
+    def __init__(self, db: Session):
+        super().__init__(db)
+
     model = EmotionRecord
 
-    def create(
-        self,
-        db: Session,
-        *,
-        user_id: UUID,
-        record_date: date,
-        mood: int,
-        anxiety: int,
-        fatigue: int,
-        sleep_hours: Decimal | None = None,
-        note: str | None = None,
-    ) -> EmotionRecord:
-        """Create a new daily emotion record for a user."""
-
-        record = EmotionRecord(
-            user_id=user_id,
-            record_date=record_date,
-            mood=mood,
-            anxiety=anxiety,
-            fatigue=fatigue,
-            sleep_hours=sleep_hours,
-            note=note,
-        )
-        db.add(record)
-        db.flush()
-        db.refresh(record)
-        return record
-
-    def get_by_user_and_date(self, db: Session, user_id: UUID, record_date: date) -> EmotionRecord | None:
+    def get_by_user_and_date(self, user_id: UUID, record_date: date) -> EmotionRecord | None:
         """Return the emotion record for a specific user and day."""
 
         stmt = select(EmotionRecord).where(
             EmotionRecord.user_id == user_id,
             EmotionRecord.record_date == record_date,
         )
-        return db.scalar(stmt)
+        return self.db.scalar(stmt)
 
-    def list_by_user(self, db: Session, user_id: UUID) -> list[EmotionRecord]:
+    def list_by_user(self, user_id: UUID) -> list[EmotionRecord]:
         """Return all emotion records of a user ordered from newest to oldest."""
 
         stmt = (
@@ -61,11 +36,10 @@ class EmotionRepository(BaseRepository[EmotionRecord]):
             .where(EmotionRecord.user_id == user_id)
             .order_by(EmotionRecord.record_date.desc())
         )
-        return list(db.scalars(stmt))
+        return list(self.db.scalars(stmt))
 
     def list_by_user_and_period(
         self,
-        db: Session,
         *,
         user_id: UUID,
         start_date: date,
@@ -82,11 +56,10 @@ class EmotionRepository(BaseRepository[EmotionRecord]):
             )
             .order_by(EmotionRecord.record_date.asc())
         )
-        return list(db.scalars(stmt))
+        return list(self.db.scalars(stmt))
 
     def get_by_user_date_range(
         self,
-        db: Session,
         *,
         user_id: UUID,
         start_date: date,
@@ -110,9 +83,9 @@ class EmotionRepository(BaseRepository[EmotionRecord]):
         )
         if limit is not None:
             stmt = stmt.limit(limit)
-        return list(db.scalars(stmt))
+        return list(self.db.scalars(stmt))
 
-    def get_latest(self, db: Session, *, user_id: UUID, days: int = 7) -> list[EmotionRecord]:
+    def get_latest(self, *, user_id: UUID, days: int = 7) -> list[EmotionRecord]:
         """Return the most recent ``days`` records for quick widgets and summaries.
 
         Note:
@@ -121,7 +94,7 @@ class EmotionRepository(BaseRepository[EmotionRecord]):
             tracking, the method still returns up to N latest entries.
         """
 
-        records = self.list_by_user(db, user_id)
+        records = self.list_by_user(user_id)
         return records[:days]
 
 
