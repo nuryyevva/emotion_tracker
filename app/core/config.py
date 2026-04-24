@@ -34,9 +34,8 @@ class Settings(BaseSettings):
     # DATABASE
     # =============================================================================
     DATABASE_URL: str = Field(
-        ...,
-        description="PostgreSQL connection string",
-        examples=["postgresql://user:password@localhost:5432/emotion_tracker"]
+        default=["postgresql+psycopg://emotion_user:emotion_password@localhost:5432/emotion_tracker"],
+        description="PostgreSQL connection string"
     )
     DATABASE_POOL_SIZE: int = Field(default=5, description="DB connection pool size")
     DATABASE_MAX_OVERFLOW: int = Field(default=10, description="DB max overflow")
