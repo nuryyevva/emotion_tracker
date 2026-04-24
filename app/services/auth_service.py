@@ -84,7 +84,7 @@ class AuthService:
             token_type="bearer",
             expires_in=3600,
             user=UserAuthResponse(
-                user_id=user.id,
+                user_id=str(user.id),
                 email=user_reg.email,
                 created_at=user.created_at
             )
@@ -117,7 +117,7 @@ class AuthService:
             token_type="bearer",
             expires_in=3600,
             user=UserAuthResponse(
-                user_id=user.id,
+                user_id=str(user.id),
                 email=user.email,
                 created_at=user.created_at
             )

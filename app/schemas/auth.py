@@ -114,7 +114,7 @@ class TokenRefreshRequest(BaseSchema):
 # =============================================================================
 
 
-class UserAuthResponse(UUIDMixin, BaseSchema):
+class UserAuthResponse(BaseSchema):
     """User data in authentication response."""
     user_id: str
     email: str
