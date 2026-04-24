@@ -1,3 +1,3 @@
-from .v1.auth import router
+# API v1 module - exports all routers for the API version 1
 
-__all__ = ["router"]
+__all__ = []
