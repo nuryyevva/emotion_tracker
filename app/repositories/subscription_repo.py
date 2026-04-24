@@ -18,33 +18,6 @@ class SubscriptionRepository(BaseRepository[Subscription]):
 
     model = Subscription
 
-    def create(
-        self,
-        *,
-        user_id: UUID,
-        plan: str,
-        status: SubscriptionStatus = SubscriptionStatus.TRIAL,
-        started_at: datetime | None = None,
-        expires_at: datetime | None = None,
-        provider: str | None = None,
-        external_payment_id: str | None = None,
-    ) -> Subscription:
-        """Create a new subscription record for a user."""
-
-        subscription = Subscription(
-            user_id=user_id,
-            plan=plan,
-            status=status,
-            started_at=started_at,
-            expires_at=expires_at,
-            provider=provider,
-            external_payment_id=external_payment_id,
-        )
-        self.db.add(subscription)
-        self.db.flush()
-        self.db.refresh(subscription)
-        return subscription
-
     def get_by_user(self, user_id: UUID) -> Subscription | None:
         """Return the most recent subscription of a user."""
 

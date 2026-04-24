@@ -19,33 +19,6 @@ class EmotionRepository(BaseRepository[EmotionRecord]):
 
     model = EmotionRecord
 
-    def create(
-        self,
-        *,
-        user_id: UUID,
-        record_date: date,
-        mood: int,
-        anxiety: int,
-        fatigue: int,
-        sleep_hours: Decimal | None = None,
-        note: str | None = None,
-    ) -> EmotionRecord:
-        """Create a new daily emotion record for a user."""
-
-        record = EmotionRecord(
-            user_id=user_id,
-            record_date=record_date,
-            mood=mood,
-            anxiety=anxiety,
-            fatigue=fatigue,
-            sleep_hours=sleep_hours,
-            note=note,
-        )
-        self.db.add(record)
-        self.db.flush()
-        self.db.refresh(record)
-        return record
-
     def get_by_user_and_date(self, user_id: UUID, record_date: date) -> EmotionRecord | None:
         """Return the emotion record for a specific user and day."""
 

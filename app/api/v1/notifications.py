@@ -7,33 +7,6 @@ from uuid import uuid4
 router = APIRouter(prefix="/notifications")
 
 
-class NotificationResponse(BaseModel):
-    id: str
-    title: str
-    message: str
-    type: str
-    is_read: bool
-    created_at: datetime
-    data: Optional[dict]
-
-
-class NotificationPreferencesResponse(BaseModel):
-    email_enabled: bool
-    telegram_enabled: bool
-    daily_summary: bool
-    weekly_report: bool
-    reminder_time: Optional[str]
-    updated_at: datetime
-
-
-class PreferencesUpdateRequest(BaseModel):
-    email_enabled: Optional[bool] = None
-    telegram_enabled: Optional[bool] = None
-    daily_summary: Optional[bool] = None
-    weekly_report: Optional[bool] = None
-    reminder_time: Optional[str] = None
-
-
 @router.put("/notifications/preferences", response_model=NotificationPreferencesResponse)
 async def put_notifications_preferences(request: PreferencesUpdateRequest):
     return NotificationPreferencesResponse(

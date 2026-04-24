@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.schemas.common import DeliveryStatus, enum_values
+from app.schemas.common import DeliveryStatus, enum_values , NotificationChannel
 
 
 class Recommendation(Base):
@@ -51,7 +51,7 @@ class NotificationLog(Base):
         ForeignKey("recommendations.id"),
         nullable=True,
     )
-    channel: Mapped[str] = mapped_column(String(50), nullable=False)
+    channel: Mapped[NotificationChannel] = mapped_column(String(50), nullable=False)
     trigger_type: Mapped[str] = mapped_column(String(100), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     delivery_status: Mapped[DeliveryStatus] = mapped_column(

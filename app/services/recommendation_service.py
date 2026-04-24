@@ -3,12 +3,13 @@
 """
 from uuid import UUID
 from typing import Dict, Any, List, Optional
-
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from ..repositories.recommendation_repo import RecommendationRepository
 from ..repositories.notification_repo import NotificationRepository
 from ..schemas.recommendation import RecommendationTemplate
+from app.utils.recommendations_engine import select_recommendation
 
 
 class RecommendationService:
@@ -23,31 +24,7 @@ class RecommendationService:
         """
         self.db = db
         self.repo = RecommendationRepository(db)
-        self.notif_service = NotificationRepository(db)
-
-    def _to_dict(self, recommendation) -> Dict[str, Any]:
-        """Конвертирует ORM модель в словарь"""
-        return {
-            "id": recommendation.id,
-            "trigger_type": recommendation.trigger_type,
-            "category": recommendation.category,
-            "message": recommendation.message,
-            "priority": recommendation.priority,
-            "is_active": recommendation.is_active
-        }
-
-    def _to_response(self, recommendation) -> RecommendationTemplate:
-        """Конвертирует ORM модель в Response схему"""
-        return RecommendationTemplate(
-            id=recommendation.id,
-            trigger_type=recommendation.trigger_type,
-            category=recommendation.category,
-            message=recommendation.message,
-            priority=recommendation.priority,
-            is_active=recommendation.is_active,
-            created_at=recommendation.created_at,
-            updated_at=recommendation.updated_at
-        )
+        self.notif_repo = NotificationRepository(db)
 
     def get_recommendation(
             self,
@@ -64,24 +41,20 @@ class RecommendationService:
         Returns:
             dict[str, Any] | None: Рекомендация или None
         """
-        # Получение недавних уведомлений этого типа
-        recent = self.notif_service.get_recent_by_trigger(
-            user_id=user_id,
-            trigger_type=trigger_type,
-            days=7
-        )
-        exclude_ids = [n.recommendation_id for n in recent if n.recommendation_id]
+        # Get candidates
+        candidates = self.repo.get_by_trigger_type(trigger_type=trigger_type)
+        if not candidates:
+            return None
 
-        # Получение случайной активной рекомендации
-        recommendation = self.repo.get_random_active(
-            trigger_type=trigger_type,
-            exclude_ids=exclude_ids if exclude_ids else None
-        )
+        # Get recent IDs (rotation)
+        recent_logs = self.notif_repo.get_recent_by_trigger(user_id=user_id, trigger_type=trigger_type, days=7)
+        recent_ids = [log.recommendation_id for log in recent_logs if log.recommendation_id]
 
-        if recommendation:
-            return self._to_dict(recommendation)
+        # Select
+        rec_dict = [{"id": c.id, "message": c.message, "priority": c.priority} for c in candidates]
+        selected = select_recommendation(rec_dict, recent_ids, context={"hour": datetime.now().hour})
 
-        return None
+        return selected
 
     def get_all_active(
             self,
@@ -97,15 +70,12 @@ class RecommendationService:
             list[dict[str, Any]]: Список активных рекомендаций
         """
         if trigger_type:
-            recommendations = self.repo.get_by_trigger_type(
-                trigger_type=trigger_type,
-                is_active=True
-            )
+            recs = self.repo.get_by_trigger_type(trigger_type=trigger_type)
         else:
-            # Получение всех активных по всем типам
-            all_triggers = ["fatigue_high", "anxiety_high", "mood_low", "mood_improvement", "sleep_deviation"]
-            recommendations = []
-            for t in all_triggers:
-                recommendations.extend(self.repo.get_by_trigger_type(trigger_type=t, is_active=True))
+            recs = self.repo.get_multi(limit=100)  # Base repo method
 
-        return [self._to_dict(r) for r in recommendations]
+        return [
+            {"id": r.id, "trigger_type": r.trigger_type, "category": r.category, "message": r.message,
+             "priority": r.priority}
+            for r in recs
+        ]

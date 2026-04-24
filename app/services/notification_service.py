@@ -9,14 +9,9 @@ from ..repositories.notification_repo import NotificationRepository
 from ..services.recommendation_service import RecommendationService
 from ..services.user_service import UserService
 from ..schemas.notification import NotificationLogResponse, NotificationList
-from ..models import NotificationLog
-
-
-# Заглушка для Telegram клиента
-class TelegramProvider:
-    def send_message(self, chat_id: str, message: str) -> bool:
-        return True
-
+from app.utils import is_within_notification_window
+from app.core.constants import REMINDER_ROTATION_DAYS
+from app.core.clients.telegram_client import TelegramProvider
 
 class NotificationService:
     """Сервис для работы с уведомлениями"""
@@ -34,19 +29,6 @@ class NotificationService:
         self.user_service = UserService(db)
         self.telegram_client = TelegramProvider()
 
-    def _to_response(self, notification: NotificationLog) -> NotificationLogResponse:
-        """Конвертирует ORM модель в Response схему"""
-        return NotificationLogResponse(
-            id=notification.id,
-            user_id=notification.user_id,
-            recommendation_id=notification.recommendation_id,
-            channel=notification.channel,
-            trigger_type=notification.trigger_type,
-            message=notification.message,
-            delivery_status=notification.delivery_status,
-            sent_at=notification.sent_at
-        )
-
     def send_trend_alert(self, user_id: UUID, trigger_type: str) -> None:
         """
         Отправка алерта об изменении тренда
@@ -55,38 +37,37 @@ class NotificationService:
             user_id: ID пользователя
             trigger_type: Тип триггера
         """
-        # Получение рекомендации
-        recommendation = self.rec_service.get_recommendation(user_id, trigger_type)
+        # Check rotation
+        recent = self.repo.get_recent_by_trigger(user_id=user_id, trigger_type=trigger_type,
+                                                 days=REMINDER_ROTATION_DAYS)
+        if recent:
+            return  # Already sent recently
 
-        if not recommendation:
+        # Get recommendation
+        rec = self.rec_service.get_recommendation(user_id, trigger_type)
+        if not rec:
             return
 
-        # Получение настроек пользователя
+        # Get user settings
         settings = self.user_service.get_settings(user_id)
 
-        # Создание лога уведомления
-        notification = self.repo.create_log(
+        # Send via preferred channel
+        # success = False
+        # Need chat_id from user profile (simplified here)
+        success = self.telegram_client.send_trend_notification("chat_id_mock", trigger_type, rec.message)
+
+        # Log
+        log = self.repo.create_log(
             user_id=user_id,
-            recommendation_id=recommendation.get("id"),
-            channel=settings.notify_channel.value if hasattr(settings.notify_channel, 'value') else str(
-                settings.notify_channel),
+            recommendation_id=rec.id,
+            channel=settings.notify_channel,
             trigger_type=trigger_type,
-            message=recommendation.get("message", "")
+            message=rec.message,
         )
-
-        # Отправка через выбранный канал
-        if settings.notify_channel.value == "telegram":
-            # Получение telegram_chat_id пользователя
-            user = self.user_service.get_profile(user_id)
-            # В реальном проекте нужно получить chat_id из профиля
-            # self.telegram_client.send_message(chat_id, notification.message)
-            pass
-        elif settings.notify_channel.value == "email":
-            # Отправка email
-            pass
-
-        # Отметка об успешной отправке
-        self.repo.mark_as_sent(notification=notification)
+        if success:
+            self.repo.mark_as_sent(notification=log)
+        else:
+            self.repo.mark_as_failed(notification=log)
 
     def send_daily_reminder(self, user_id: UUID) -> None:
         """
@@ -96,28 +77,21 @@ class NotificationService:
             user_id: ID пользователя
         """
         settings = self.user_service.get_settings(user_id)
-
         if not settings.reminders_enabled:
             return
 
-        reminder_message = "Как вы себя чувствуете сегодня? Не забудьте отметить свои эмоции!"
+        # Check window
+        if not is_within_notification_window(
+                settings.notify_window_start.strftime("%H:%M"),
+                settings.notify_window_end.strftime("%H:%M"),
+                settings.,  # add timezone correctly
+        ):
+            return
 
-        notification = self.repo.create_log(
-            user_id=user_id,
-            recommendation_id=None,
-            channel=settings.notify_channel.value if hasattr(settings.notify_channel, 'value') else str(
-                settings.notify_channel),
-            trigger_type="daily_reminder",
-            message=reminder_message
-        )
+        message = "Хотите отметить, как прошёл день? Это займёт 30 секунд."
 
-        # Отправка через выбранный канал
-        if settings.notify_channel.value == "telegram":
-            pass
-        elif settings.notify_channel.value == "email":
-            pass
-
-        self.repo.mark_as_sent(notification=notification)
+        # Send
+        self.telegram_client.send_message("chat_id_mock", message) #add chat id correctly
 
     def get_history(self, user_id: UUID, limit: int = 50) -> NotificationList:
         """
@@ -130,12 +104,15 @@ class NotificationService:
         Returns:
             NotificationList: Список уведомлений
         """
-        notifications = self.repo.get_by_user(user_id=user_id)
-
-        # Ограничение по лимиту
-        notifications = notifications[:limit]
-
+        logs = self.repo.get_by_user(user_id=user_id, limit=limit) # add limit to the repo method
         return NotificationList(
-            items=[self._to_response(n) for n in notifications],
-            total=len(notifications)
+            items=[
+                NotificationLogResponse(
+                    id=log.id, user_id=log.user_id, recommendation_id=log.recommendation_id,
+                    channel=log.channel, trigger_type=log.trigger_type, message=log.message,
+                    delivery_status=log.delivery_status, sent_at=log.sent_at,
+                )
+                for log in logs
+            ],
+            total=len(logs),
         )
