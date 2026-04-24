@@ -33,7 +33,7 @@ from app.schemas.admin import (
     AdminSubscriptionList,
 )
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
+router = APIRouter(prefix="/admin")
 
 
 def get_admin_service(db: Session = Depends(get_db)) -> AdminService:
