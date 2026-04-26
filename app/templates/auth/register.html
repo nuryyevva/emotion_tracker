@@ -14,74 +14,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Tailwind Configuration -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            bg: '#FCFBFA',
-                            sage: '#A7B5A7',
-                            sageDark: '#7A8C7A',
-                            sand: '#EDE6DD',
-                            sky: '#E3EDF5',
-                            heading: '#1F2937',
-                            muted: '#6B7280'
-                        }
-                    },
-                    boxShadow: {
-                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="../static/js/tailwind-config.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../static/css/styles.css">
 
     <style>
         body {
             background-color: #FCFBFA;
             min-height: 100vh;
         }
-        
-        /* Blob Animations */
-        .blob-bg {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.5;
-            z-index: -1;
-            animation: float 8s infinite ease-in-out alternate;
-        }
-        
-        @keyframes float {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(-20px, 20px) rotate(-5deg); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
     </style>
 </head>
 <body class="flex items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans text-gray-900">
 
     <!-- Background Elements -->
-    <div class="blob-bg bg-brand-sky w-[30rem] h-[30rem] bottom-[-5rem] right-[-5rem]"></div>
-    <div class="blob-bg bg-brand-sand w-[25rem] h-[25rem] top-[-5rem] left-[-5rem]"></div>
+    <div class="blob-bg-auth bg-brand-sky w-[30rem] h-[30rem] bottom-[-5rem] right-[-5rem]"></div>
+    <div class="blob-bg-auth bg-brand-sand w-[25rem] h-[25rem] top-[-5rem] left-[-5rem]"></div>
 
     <!-- Register Card -->
     <main class="w-full max-w-md bg-white rounded-3xl shadow-soft p-8 md:p-10 relative z-10 fade-in">
@@ -102,7 +51,7 @@
         </div>
 
         <!-- Form -->
-        <form action="#" method="POST" class="space-y-5">
+        <form onsubmit="handleRegister(event)" class="space-y-5">
             
             <!-- Email Input -->
             <div>
@@ -160,5 +109,6 @@
 
     </main>
 
+    <script src="../static/js/register.js"></script>
 </body>
 </html>

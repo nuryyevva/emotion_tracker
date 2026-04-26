@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дневник | Трекер эмоций</title>
+    
+    <!-- Font Import -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script src="../static/js/tailwind-config.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="../static/css/styles.css">
+</head>
+<body class="flex flex-col min-h-screen overflow-y-auto overflow-x-hidden relative text-gray-800 font-sans">
+
+    <!-- Background Elements -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div class="blob-bg bg-brand-sky/30 w-[500px] h-[500px] top-[-10%] left-[-10%]"></div>
+        <div class="blob-bg bg-brand-sage/20 w-[400px] h-[400px] bottom-[10%] right-[-5%]"></div>
+    </div>
+
+    <!-- Navigation / Top Bar -->
+    <nav class="w-full px-6 py-5 flex items-center justify-between max-w-5xl mx-auto w-full z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-brand-sky flex items-center justify-center text-brand-sageDark font-bold">T</div>
+            <span class="font-semibold text-lg tracking-tight text-gray-800">Трекер эмоций</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="analytics.html" class="text-sm font-medium text-gray-500 hover:text-brand-sageDark transition-colors">Аналитика</a>
+            <a href="dashboard.html" class="text-sm font-medium text-brand-heading hover:text-brand-sageDark transition-colors">Дневник</a>
+            <a href="settings.html" class="text-sm font-medium text-gray-500 hover:text-brand-sageDark transition-colors">Настройки</a>
+            <button onclick="logout()" class="text-sm font-medium text-gray-400 hover:text-red-400 transition-colors ml-2">Выйти</button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col justify-center items-center w-full max-w-2xl mx-auto px-6 pb-12 z-10">
+        
+        <!-- Header -->
+        <header class="text-center mb-10 fade-in-up">
+            <h1 class="text-3xl font-light text-gray-900 mb-2 tracking-tight">Как вы себя чувствуете сегодня?</h1>
+            <p class="text-sm text-gray-500">Отвечайте честно и быстро</p>
+        </header>
+
+        <!-- Input Card -->
+        <div class="w-full bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-soft p-6 md:p-8 space-y-8 border border-white/50 fade-in-up" style="animation-delay: 0.1s;">
+            
+            <!-- Mood Slider -->
+            <div class="space-y-3 group">
+                <div class="flex justify-between items-end">
+                    <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <svg class="w-5 h-5 text-brand-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Настроение
+                    </label>
+                    <span id="value-mood" class="text-lg font-bold text-brand-heading">5</span>
+                </div>
+                <input type="range" id="mood" min="1" max="10" value="5" class="w-full mt-2" oninput="updateValue('mood', this.value)" aria-label="Настроение от 1 до 10">
+                <div class="flex justify-between text-xs text-gray-300 font-medium">
+                    <span>😞 Плохо</span>
+                    <span>😊 Отлично</span>
+                </div>
+            </div>
+
+            <!-- Anxiety Slider -->
+            <div class="space-y-3 group">
+                <div class="flex justify-between items-end">
+                    <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        Тревожность
+                    </label>
+                    <span id="value-anxiety" class="text-lg font-bold text-brand-heading">3</span>
+                </div>
+                <input type="range" id="anxiety" min="1" max="10" value="3" class="w-full mt-2" oninput="updateValue('anxiety', this.value)" aria-label="Уровень тревожности от 1 до 10">
+                <div class="flex justify-between text-xs text-gray-300 font-medium">
+                    <span>🍃 Спокойно</span>
+                    <span>🌪 Сильно</span>
+                </div>
+            </div>
+
+            <!-- Fatigue Slider -->
+            <div class="space-y-3 group">
+                <div class="flex justify-between items-end">
+                    <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Усталость
+                    </label>
+                    <span id="value-fatigue" class="text-lg font-bold text-brand-heading">6</span>
+                </div>
+                <input type="range" id="fatigue" min="1" max="10" value="6" class="w-full mt-2" oninput="updateValue('fatigue', this.value)" aria-label="Уровень усталости от 1 до 10">
+                <div class="flex justify-between text-xs text-gray-300 font-medium">
+                    <span>🔋 Полные сил</span>
+                    <span>⚡️ Разбитый</span>
+                </div>
+            </div>
+
+            <!-- Sleep Hours (Optional) -->
+            <div class="space-y-3 group pt-4 border-t border-gray-100">
+                <div class="flex justify-between items-end">
+                    <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        Сон (часов)
+                    </label>
+                    <span id="value-sleep" class="text-lg font-bold text-brand-heading">7.5</span>
+                </div>
+                <input type="range" id="sleep" min="0" max="12" step="0.5" value="7.5" class="w-full mt-2" oninput="updateValue('sleep', this.value)" aria-label="Количество сна в часах">
+                <div class="flex justify-between text-xs text-gray-300 font-medium">
+                    <span>😴 Мало</span>
+                    <span>💤 Много</span>
+                </div>
+            </div>
+
+            <!-- Note (Optional) -->
+            <div class="space-y-3 pt-4 border-t border-gray-100">
+                <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    Заметка (необязательно)
+                </label>
+                <textarea id="note" rows="3" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sky focus:border-transparent transition-all duration-200 resize-none" placeholder="Что вы чувствовали сегодня?"></textarea>
+            </div>
+
+        </div>
+
+        <!-- Action Button -->
+        <div class="w-full mt-10 fade-in-up" style="animation-delay: 0.2s;">
+            <button onclick="saveRecord()" class="w-full py-5 rounded-2xl bg-brand-heading text-white font-medium text-lg shadow-lg shadow-gray-200 hover:-translate-y-1 hover:bg-gray-800 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Сохранить запись
+            </button>
+        </div>
+        
+    </main>
+
+    <!-- Success Toast Notification -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand-heading text-white px-6 py-3 rounded-full shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span class="text-sm font-medium">Запись сохранена!</span>
+        </div>
+    </div>
+
+    <!-- Script for UI interaction -->
+    <script src="../static/js/dashboard.js"></script>
+</body>
+</html>

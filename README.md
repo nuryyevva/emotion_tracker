@@ -23,6 +23,3 @@
 - `app/core/config.py` contains environment-based settings.
 - `app/core/database.py` is the shared SQLAlchemy engine and session layer.
 - `app/api/main.py` is the FastAPI entrypoint.
-- `app/db/models.py` remains the current ORM source of truth for the domain model.
-
-This keeps the existing database model while moving the project closer to a standard `FastAPI + PostgreSQL + Docker` setup.
