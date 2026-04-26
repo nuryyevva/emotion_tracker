@@ -135,44 +135,6 @@
                 Сохранить запись
             </button>
         </div>
-
-        <!-- Mini History Chart -->
-        <div class="mt-12 w-full max-w-sm fade-in-up" style="animation-delay: 0.3s;">
-            <div class="flex items-center justify-between mb-4 px-2">
-                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Моя статистика</h3>
-                <span class="text-xs text-brand-sageDark font-medium">За неделю</span>
-            </div>
-            
-            <!-- Simple SVG Line Chart Mockup -->
-            <div class="relative h-24 w-full bg-white/40 rounded-xl border border-white shadow-inner p-4 backdrop-blur-sm">
-                <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 200 80">
-                    <!-- Grid lines -->
-                    <line x1="0" y1="20" x2="200" y2="20" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4 2" />
-                    <line x1="0" y1="40" x2="200" y2="40" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4 2" />
-                    <line x1="0" y1="60" x2="200" y2="60" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4 2" />
-                    
-                    <!-- Data Line -->
-                    <polyline points="0,60 35,55 70,30 105,45 140,20 175,25 200,15" fill="none" stroke="#A7B5A7" stroke-width="3" vector-effect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/>
-                    
-                    <!-- Area Gradient -->
-                    <defs>
-                        <linearGradient id="gradientArea" x1="0" x2="0" y1="0" y2="1">
-                            <stop offset="0%" stop-color="#A7B5A7" stop-opacity="0.3"/>
-                            <stop offset="100%" stop-color="#A7B5A7" stop-opacity="0"/>
-                        </linearGradient>
-                    </defs>
-                    <polygon points="0,80 0,60 35,55 70,30 105,45 140,20 175,25 200,15 200,80" fill="url(#gradientArea)" />
-                    
-                    <!-- Active Dot -->
-                    <circle cx="200" cy="15" r="4" fill="#1F2937" />
-                </svg>
-                
-                <!-- Axis labels (Mockup) -->
-                <div class="absolute bottom-1 left-1 flex justify-between w-full text-[9px] text-gray-300 font-medium">
-                    <span>P</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>Su</span>
-                </div>
-            </div>
-        </div>
         
     </main>
 
