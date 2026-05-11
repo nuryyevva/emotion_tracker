@@ -73,8 +73,8 @@
             <!-- Average Anxiety Card -->
             <div class="stat-card bg-white/80 backdrop-blur-xl rounded-2xl shadow-soft p-6 border border-white/50">
                 <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     </div>
                     <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Средняя тревожность</h3>
                 </div>
@@ -91,8 +91,8 @@
             <!-- Average Fatigue Card -->
             <div class="stat-card bg-white/80 backdrop-blur-xl rounded-2xl shadow-soft p-6 border border-white/50">
                 <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     </div>
                     <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Средняя усталость</h3>
                 </div>
@@ -106,112 +106,31 @@
             </div>
         </div>
 
-        <!-- Weekday Patterns Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-            <!-- Weekday Chart -->
+        <!-- Analytics last 30 days Section -->
+        <div class="w-full max-w-7xl mx-auto mb-10">
             <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-soft p-6 border border-white/50 fade-in-up" style="animation-delay: 0.2s;">
-                <h3 class="text-lg font-semibold text-gray-800 mb-6">Паттерны по дням недели</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-6 text-center">Динамика показателей за 30 дней</h3>
                 
-                <!-- Bar Chart Mockup -->
-                <div class="relative h-64">
-                    <svg class="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
-                        <!-- Grid lines -->
-                        <line x1="0" y1="40" x2="400" y2="40" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4 2" />
-                        <line x1="0" y1="80" x2="400" y2="80" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4 2" />
-                        <line x1="0" y1="120" x2="400" y2="120" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4 2" />
-                        <line x1="0" y1="160" x2="400" y2="160" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="4 2" />
-                        
-                        <!-- Bars for each day (mock data) -->
-                        <!-- Monday -->
-                        <rect x="10" y="100" width="40" height="60" fill="#A7B5A7" rx="4" class="hover:opacity-80 transition-opacity cursor-pointer">
-                            <title>Пн: Настроение 6.2, Тревожность 5.5, Усталость 6.0</title>
-                        </rect>
-                        <!-- Tuesday -->
-                        <rect x="65" y="80" width="40" height="80" fill="#7A8C7A" rx="4" class="hover:opacity-80 transition-opacity cursor-pointer">
-                            <title>Вт: Настроение 6.8, Тревожность 4.9, Усталость 5.5</title>
-                        </rect>
-                        <!-- Wednesday -->
-                        <rect x="120" y="90" width="40" height="70" fill="#A7B5A7" rx="4" class="hover:opacity-80 transition-opacity cursor-pointer">
-                            <title>Ср: Настроение 6.5, Тревожность 5.2, Усталость 5.8</title>
-                        </rect>
-                        <!-- Thursday -->
-                        <rect x="175" y="85" width="40" height="75" fill="#7A8C7A" rx="4" class="hover:opacity-80 transition-opacity cursor-pointer">
-                            <title>Чт: Настроение 6.6, Тревожность 5.0, Усталость 5.6</title>
-                        </rect>
-                        <!-- Friday -->
-                        <rect x="230" y="70" width="40" height="90" fill="#A7B5A7" rx="4" class="hover:opacity-80 transition-opacity cursor-pointer">
-                            <title>Пт: Настроение 7.2, Тревожность 4.5, Усталость 5.2</title>
-                        </rect>
-                        <!-- Saturday -->
-                        <rect x="285" y="60" width="40" height="100" fill="#7A8C7A" rx="4" class="hover:opacity-80 transition-opacity cursor-pointer">
-                            <title>Сб: Настроение 7.5, Тревожность 4.2, Усталость 4.8</title>
-                        </rect>
-                        <!-- Sunday -->
-                        <rect x="340" y="65" width="40" height="95" fill="#A7B5A7" rx="4" class="hover:opacity-80 transition-opacity cursor-pointer">
-                            <title>Вс: Настроение 7.3, Тревожность 4.3, Усталость 5.0</title>
-                        </rect>
-                    </svg>
-                    
-                    <!-- Day labels -->
-                    <div class="absolute bottom-0 left-0 w-full flex justify-between text-xs text-gray-400 font-medium pt-2">
-                        <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
-                    </div>
+                <!-- Chart Container -->
+                <div class="relative w-full h-96" id="line-chart-container">
+                    <svg id="line-chart" class="w-full h-full" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid meet"></svg>
                 </div>
                 
                 <!-- Legend -->
-                <div class="flex items-center justify-center gap-6 mt-6">
+                <div class="flex items-center justify-center gap-8 mt-6 flex-wrap">
                     <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full bg-brand-sage"></div>
+                        <div class="w-3 h-3 rounded-full" style="background-color: #43A047; border: 2px solid white; box-shadow: 0 0 0 1px #43A047;"></div>
                         <span class="text-xs text-gray-500">Настроение</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full bg-brand-sageDark"></div>
-                        <span class="text-xs text-gray-500">Лучшие дни</span>
+                        <div class="w-3 h-3 rounded-full" style="background-color: #FDD835; border: 2px solid white; box-shadow: 0 0 0 1px #FDD835;"></div>
+                        <span class="text-xs text-gray-500">Тревожность</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full" style="background-color: #3182ce; border: 2px solid white; box-shadow: 0 0 0 1px #3182ce;"></div>
+                        <span class="text-xs text-gray-500">Усталость</span>
                     </div>
                 </div>
-            </div>
-
-            <!-- Insights Panel -->
-            <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-soft p-6 border border-white/50 fade-in-up" style="animation-delay: 0.3s;">
-                <h3 class="text-lg font-semibold text-gray-800 mb-6">Инсайты</h3>
-                
-                <div class="space-y-4" id="insights-container">
-                    <!-- Insight 1 -->
-                    <div class="flex items-start gap-3 p-4 bg-green-50 rounded-xl">
-                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-700">По вторникам тревожность в среднем ниже на <strong>0.6 пункта</strong></p>
-                        </div>
-                    </div>
-                    
-                    <!-- Insight 2 -->
-                    <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-xl">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-700">В выходные усталость снижается на <strong>1.2 пункта</strong></p>
-                        </div>
-                    </div>
-                    
-                    <!-- Insight 3 -->
-                    <div class="flex items-start gap-3 p-4 bg-purple-50 rounded-xl">
-                        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-700">Вы заполняете дневник <strong>5 дней подряд</strong> — отличный прогресс!</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Refresh Button -->
-                <button onclick="refreshAnalytics()" class="w-full mt-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    Обновить данные
-                </button>
             </div>
         </div>
 
@@ -299,56 +218,6 @@
     </div>
 
     <!-- Script for UI interaction -->
-    <script>
-        // Mock data for analytics
-        const mockAnalyticsData = {
-            weekday_patterns: {
-                "0": { day_name: "Monday", mood: 6.2, anxiety: 5.5, fatigue: 6.0, record_count: 12 },
-                "1": { day_name: "Tuesday", mood: 6.8, anxiety: 4.9, fatigue: 5.5, record_count: 13 },
-                "2": { day_name: "Wednesday", mood: 6.5, anxiety: 5.2, fatigue: 5.8, record_count: 11 },
-                "3": { day_name: "Thursday", mood: 6.6, anxiety: 5.0, fatigue: 5.6, record_count: 10 },
-                "4": { day_name: "Friday", mood: 7.2, anxiety: 4.5, fatigue: 5.2, record_count: 14 },
-                "5": { day_name: "Saturday", mood: 7.5, anxiety: 4.2, fatigue: 4.8, record_count: 9 },
-                "6": { day_name: "Sunday", mood: 7.3, anxiety: 4.3, fatigue: 5.0, record_count: 8 }
-            },
-            insights: [
-                "По вторникам тревожность в среднем ниже на 0.6 пункта",
-                "В выходные усталость снижается на 1.2 пункта",
-                "Вы заполняете дневник 5 дней подряд — отличный прогресс!"
-            ],
-            averages: {
-                mood: 6.8,
-                anxiety: 4.2,
-                fatigue: 5.1
-            }
-        };
-
-        function refreshAnalytics() {
-            // Show loading toast
-            const loadingToast = document.getElementById('loading-toast');
-            loadingToast.classList.remove('translate-y-20', 'opacity-0');
-            
-            // Simulate API call delay
-            setTimeout(() => {
-                loadingToast.classList.add('translate-y-20', 'opacity-0');
-                
-                // In real implementation, this would fetch from API
-                console.log('Fetching analytics data...');
-                console.log('Mock data:', mockAnalyticsData);
-                
-                // Update UI with mock data (already displayed)
-            }, 1500);
-        }
-
-        function logout() {
-            window.location.href = 'login.html';
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Analytics page loaded');
-            console.log('Mock analytics data:', mockAnalyticsData);
-        });
-    </script>
+    <script src="../../static/js/analytics.js"></script>
 </body>
 </html>
