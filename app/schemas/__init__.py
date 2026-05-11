@@ -102,4 +102,9 @@ __all__ = [
     # Health
     "HealthResponse",
     "HealthServiceStatus",
+    # Analytics
+    "DailyAverageResponse",
+    "WeeklyAveragesResponse",
+    "WeekdayAverageResponse",
+    "WeekdayAveragesListResponse"
 ]
