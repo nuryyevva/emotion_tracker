@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from app.models import EmotionRecord
 from app.repositories.base_repo import BaseRepository
 
+from collections import defaultdict
+
 
 class EmotionRepository(BaseRepository[EmotionRecord]):
     """Repository for daily emotion check-ins and emotion-based analytics."""
@@ -96,6 +98,94 @@ class EmotionRepository(BaseRepository[EmotionRecord]):
 
         records = self.list_by_user(user_id)
         return records[:days]
+
+        # Добавить в конец класса EmotionRepository
+
+        def get_weekday_averages(
+                self,
+                *,
+                user_id: UUID,
+                start_date: date,
+                end_date: date,
+        ) -> dict[int, dict[str, float]]:
+            """
+            Возвращает средние значения по дням недели.
+
+            Returns:
+                {
+                    0: {"mood": 6.5, "anxiety": 5.2, "fatigue": 5.8, "count": 5},  # Monday
+                    1: {"mood": 6.8, "anxiety": 4.9, "fatigue": 5.5, "count": 4},  # Tuesday
+                    ...
+                    6: {"mood": 7.2, "anxiety": 4.0, "fatigue": 4.8, "count": 3}   # Sunday
+                }
+            """
+            from sqlalchemy import func
+
+            records = self.list_by_user_and_period(
+                user_id=user_id,
+                start_date=start_date,
+                end_date=end_date,
+            )
+
+            if not records:
+                return {}
+
+            # Группируем по дням недели
+            weekday_moods = defaultdict(list)
+            weekday_anxieties = defaultdict(list)
+            weekday_fatigues = defaultdict(list)
+
+            for record in records:
+                weekday = record.record_date.weekday()
+                weekday_moods[weekday].append(float(record.mood))
+                weekday_anxieties[weekday].append(float(record.anxiety))
+                weekday_fatigues[weekday].append(float(record.fatigue))
+
+            # Вычисляем средние
+            result = {}
+            for weekday in range(7):
+                if weekday_moods.get(weekday):
+                    result[weekday] = {
+                        "mood": round(sum(weekday_moods[weekday]) / len(weekday_moods[weekday]), 1),
+                        "anxiety": round(sum(weekday_anxieties[weekday]) / len(weekday_anxieties[weekday]), 1),
+                        "fatigue": round(sum(weekday_fatigues[weekday]) / len(weekday_fatigues[weekday]), 1),
+                        "count": len(weekday_moods[weekday]),
+                    }
+                else:
+                    result[weekday] = {
+                        "mood": 0.0,
+                        "anxiety": 0.0,
+                        "fatigue": 0.0,
+                        "count": 0,
+                    }
+
+            return result
+
+        def get_daily_averages(
+                self,
+                *,
+                user_id: UUID,
+                start_date: date,
+                end_date: date,
+        ) -> dict[date, dict[str, float]]:
+            """
+            Возвращает средние значения по каждому дню.
+            """
+            records = self.list_by_user_and_period(
+                user_id=user_id,
+                start_date=start_date,
+                end_date=end_date,
+            )
+
+            result = {}
+            for record in records:
+                result[record.record_date] = {
+                    "mood": float(record.mood),
+                    "anxiety": float(record.anxiety),
+                    "fatigue": float(record.fatigue),
+                }
+
+            return result
 
 
 # Backward-compatible alias for code that still imports the old repository name.
