@@ -40,6 +40,10 @@ from .emotion import (
     EmotionRecordList,
     TodayRecordResponse,
 )
+from .analytics import (
+    LastMonthMetricsItem,
+    LastMonthAnalyticsResponse,
+)
 from .notification import (
     NotificationLogResponse,
     NotificationPreferencesUpdate,
@@ -89,6 +93,9 @@ __all__ = [
     "EmotionRecordResponse",
     "EmotionRecordList",
     "TodayRecordResponse",
+    # Analytics
+    "LastMonthMetricsItem",
+    "LastMonthAnalyticsResponse",
     # Notification
     "NotificationLogResponse",
     "NotificationPreferencesUpdate",
