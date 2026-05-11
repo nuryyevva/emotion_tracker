@@ -1,0 +1,13 @@
+.git
+.gitignore
+.venv
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.db
+app/test.txt
+arch_test.db
+.idea
+.pytest_cache
+.mypy_cache
+node_modules

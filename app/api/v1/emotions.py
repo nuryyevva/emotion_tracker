@@ -36,7 +36,9 @@ def create_emotion(
     service: Annotated[EmotionService, Depends(get_emotion_service)],
 ) -> EmotionRecordWithStats:
     try:
-        return service.create_record(user.user_id, payload.model_dump(exclude_none=True))
+        created = service.create_record(user.user_id, payload.model_dump(exclude_none=True))
+        service.db.commit()
+        return created
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -92,6 +94,7 @@ def update_emotion(
             record_id=emotion_id,
             data=payload.model_dump(exclude_none=True),
         )
+        service.db.commit()
         return updated
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -106,4 +109,5 @@ def delete_emotion(
     deleted = service.delete_record(user.user_id, emotion_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
+    service.db.commit()
     return DeleteMessageResponse(message="Record deleted successfully")

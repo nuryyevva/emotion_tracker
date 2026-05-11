@@ -4,6 +4,7 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV POETRY_VIRTUALENVS_CREATE=false
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -13,8 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml poetry.lock ./
 
 RUN pip install --no-cache-dir --upgrade pip poetry && \
-    #poetry config virtualenvs.create false && \
-    poetry install #--only main --no-interaction --no-ansi
+    poetry install --only main --no-interaction --no-ansi
 
 COPY . .
 
