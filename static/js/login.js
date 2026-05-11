@@ -1,13 +1,27 @@
 // Handle login form submission
-function handleLogin(event) {
+async function handleLogin(event) {
     event.preventDefault();
-
-    // Mock login - in real implementation, this would call the API
+    
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-
-    console.log('Mock login attempt:', { email, password });
-
-    // Simulate successful login - redirect to dashboard
-    window.location.href = '../analytics.html';
+    
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    
+    try {
+        // Disable button during request
+        submitButton.disabled = true;
+        submitButton.textContent = 'Вход...';
+        
+        // Call login API
+        await window.API.auth.login(email, password);
+        
+        // Redirect to dashboard on success
+        window.location.href = '../dashboard.html';
+    } catch (error) {
+        console.error('Login failed:', error);
+        alert('Ошибка входа: ' + error.message);
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    }
 }

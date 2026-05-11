@@ -1,4 +1,4 @@
-// Mock data for analytics
+// Mock data for analytics (used as fallback)
 const mockAnalyticsData = {
     weekday_patterns: {
         "0": { day_name: "Monday", mood: 6.2, anxiety: 5.5, fatigue: 6.0, record_count: 12 },
@@ -29,47 +29,65 @@ function refreshAnalytics() {
         loadingToast.classList.remove('translate-y-20', 'opacity-0');
     }
 
-    // Simulate API call delay
+    // In real implementation, this would fetch from API
+    console.log('Fetching analytics data...');
+    
     setTimeout(() => {
         if (loadingToast) {
             loadingToast.classList.add('translate-y-20', 'opacity-0');
         }
-
-        // In real implementation, this would fetch from API
-        console.log('Fetching analytics data...');
-        console.log('Mock data:', mockAnalyticsData);
     }, 1500);
 }
 
 // Logout function
 function logout() {
-    window.location.href = 'login.html';
+    window.API.auth.logout();
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Analytics page loaded');
-    console.log('Mock analytics data:', mockAnalyticsData);
 });
 
 /**
  * Mood Tracker Chart Module
- * Файл: chart.js
  */
 const MoodChart = {
     /**
-     * 🔁 ЗАМЕНИТЕ ЭТУ ФУНКЦИЮ НА ЗАПРОС К ВАШЕМУ API
+     * Fetch data from API
      */
     async fetchData() {
-        // Пример API:
-        // const response = await fetch('/api/mood-data?days=30');
-        // return await response.json();
-        
-        return this.getMockData();
+        try {
+            // Call the emotions history API
+            const response = await window.API.emotions.getHistory({ limit: 30 });
+            
+            // Transform API response to chart data format
+            const data = {
+                dates: [],
+                mood: [],
+                anxiety: [],
+                fatigue: []
+            };
+            
+            if (response && response.items) {
+                response.items.forEach(item => {
+                    data.dates.push(new Date(item.record_date));
+                    data.mood.push(item.mood);
+                    data.anxiety.push(item.anxiety);
+                    data.fatigue.push(item.fatigue);
+                });
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('Failed to fetch analytics data:', error);
+            // Return mock data as fallback
+            return this.getMockData();
+        }
     },
     
     /**
-     * Генерация мок-данных с реальными датами
+     * Generate mock data
      */
     getMockData() {
         const data = {
@@ -79,15 +97,15 @@ const MoodChart = {
             fatigue: []
         };
         
-        // Генерируем даты: последние 30 дней от сегодня
-        const today = new Date(); // 28 апреля 2026
+        // Generate dates: last 30 days from today
+        const today = new Date();
         for (let i = 29; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
             data.dates.push(date);
         }
         
-        // Генерируем значения
+        // Generate values
         for (let i = 0; i < 30; i++) {
             const t = i / 5;
             data.mood.push(Math.max(0, Math.min(10, 6.5 + 1.5 * Math.sin(t) + (Math.random() - 0.5))));
@@ -99,7 +117,7 @@ const MoodChart = {
     },
     
     /**
-     * Форматирование даты: "28 апр"
+     * Format date: "28 апр"
      */
     formatDate(date) {
         const day = date.getDate();
@@ -108,31 +126,31 @@ const MoodChart = {
     },
     
     /**
-     * Отрисовка графика
+     * Render the chart
      */
     render(data) {
         const svg = document.getElementById('line-chart');
         if (!svg) return;
         
-        // Настройки
+        // Settings
         const width = 1200;
         const height = 400;
         const padding = { top: 20, right: 30, bottom: 60, left: 40 };
         const chartWidth = width - padding.left - padding.right;
         const chartHeight = height - padding.top - padding.bottom;
         
-        // Очистка
+        // Clear SVG
         svg.innerHTML = '';
         
-        // Масштабирование
+        // Scaling
         const scaleX = (i) => padding.left + (i / (data.dates.length - 1)) * chartWidth;
         const scaleY = (val) => padding.top + chartHeight - (val / 10) * chartHeight;
         
-        // === СЕТКА И Y-ОСЬ (0-10 все числа) ===
+        // Grid and Y-axis (0-10 all numbers)
         for (let val = 0; val <= 10; val++) {
             const y = scaleY(val);
             
-            // Горизонтальная линия сетки
+            // Horizontal grid line
             const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             gridLine.setAttribute('x1', padding.left);
             gridLine.setAttribute('y1', y);
@@ -143,7 +161,7 @@ const MoodChart = {
             gridLine.setAttribute('stroke-dasharray', val === 0 || val === 10 ? '0' : '3 3');
             svg.appendChild(gridLine);
             
-            // Подпись на Y-оси
+            // Y-axis label
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', padding.left - 10);
             text.setAttribute('y', y + 4);
@@ -155,12 +173,11 @@ const MoodChart = {
             svg.appendChild(text);
         }
         
-        // === X-ОСЬ (даты) ===
-        // Показываем каждую 5-ю дату для читаемости
+        // X-axis (dates)
         for (let i = 0; i < data.dates.length; i += 5) {
             const x = scaleX(i);
             
-            // Вертикальная линия сетки
+            // Vertical grid line
             const vLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             vLine.setAttribute('x1', x);
             vLine.setAttribute('y1', padding.top);
@@ -171,7 +188,7 @@ const MoodChart = {
             vLine.setAttribute('stroke-dasharray', '3 3');
             svg.appendChild(vLine);
             
-            // Подпись даты
+            // Date label
             const dateText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             dateText.setAttribute('x', x);
             dateText.setAttribute('y', height - 35);
@@ -183,8 +200,7 @@ const MoodChart = {
             svg.appendChild(dateText);
         }
         
-        // === ОСИ ===
-        // Y-ось
+        // Axes
         const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         yAxis.setAttribute('x1', padding.left);
         yAxis.setAttribute('y1', padding.top);
@@ -194,7 +210,6 @@ const MoodChart = {
         yAxis.setAttribute('stroke-width', '1.5');
         svg.appendChild(yAxis);
         
-        // X-ось
         const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         xAxis.setAttribute('x1', padding.left);
         xAxis.setAttribute('y1', padding.top + chartHeight);
@@ -204,23 +219,23 @@ const MoodChart = {
         xAxis.setAttribute('stroke-width', '1.5');
         svg.appendChild(xAxis);
         
-        // === ЛИНИИ И ТОЧКИ ===
+        // Lines and points
         const createPath = (values) => {
             return values.map((val, i) => 
                 `${i === 0 ? 'M' : 'L'} ${scaleX(i).toFixed(1)} ${scaleY(val).toFixed(1)}`
             ).join(' ');
         };
         
-        // Конфигурация серий
+        // Series configuration
         const series = [
             { values: data.mood, color: '#43A047', label: 'Настроение' },
             { values: data.anxiety, color: '#FDD835', label: 'Тревожность' },
             { values: data.fatigue, color: '#3182ce', label: 'Усталость' }
         ];
         
-        // Рисуем линии и точки для каждой серии
+        // Draw lines and points for each series
         series.forEach(seriesData => {
-            // Линия
+            // Line
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', createPath(seriesData.values));
             path.setAttribute('fill', 'none');
@@ -231,7 +246,7 @@ const MoodChart = {
             path.setAttribute('opacity', '0.6');
             svg.appendChild(path);
             
-            // Точки (кружочки)
+            // Points (circles)
             seriesData.values.forEach((val, i) => {
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('cx', scaleX(i));
@@ -242,7 +257,7 @@ const MoodChart = {
                 circle.setAttribute('stroke-width', '2');
                 circle.setAttribute('class', 'transition-all duration-200 hover:r-6 cursor-pointer');
                 
-                // Тултип
+                // Tooltip
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
                 title.textContent = `${this.formatDate(data.dates[i])}: ${val.toFixed(1)}`;
                 circle.appendChild(title);
@@ -251,7 +266,7 @@ const MoodChart = {
             });
         });
         
-        // === Подпись оси X ===
+        // X-axis label
         const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         xLabel.setAttribute('x', width / 2);
         xLabel.setAttribute('y', height - 10);
@@ -262,7 +277,7 @@ const MoodChart = {
         xLabel.textContent = 'Дата';
         svg.appendChild(xLabel);
         
-        // === Подпись оси Y ===
+        // Y-axis label
         const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         yLabel.setAttribute('x', 15);
         yLabel.setAttribute('y', height / 2);
@@ -276,20 +291,20 @@ const MoodChart = {
     },
     
     /**
-     * Инициализация
+     * Initialize
      */
     async init() {
         try {
             const data = await this.fetchData();
             this.render(data);
         } catch (error) {
-            console.error('❌ Ошибка загрузки данных графика:', error);
+            console.error('❌ Error loading chart data:', error);
             this.render(this.getMockData());
         }
     }
 };
 
-// Автозапуск
+// Auto-start
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => MoodChart.init());
 } else {
