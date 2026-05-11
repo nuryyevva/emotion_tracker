@@ -152,14 +152,15 @@ class EmotionService:
             note = note_validation["sanitized"]
 
         record = self.repo.create(
-            self.db,
-            user_id=user_id,
-            record_date=record_date,
-            mood=data["mood"],
-            anxiety=data["anxiety"],
-            fatigue=data["fatigue"],
-            sleep_hours=sleep_hours,
-            note=note
+            obj_in={
+                "user_id": user_id,
+                "record_date": record_date,
+                "mood": data["mood"],
+                "anxiety": data["anxiety"],
+                "fatigue": data["fatigue"],
+                "sleep_hours": sleep_hours,
+                "note": note
+            }
         )
 
         mini_stats = self._calculate_mini_stats(user_id)
